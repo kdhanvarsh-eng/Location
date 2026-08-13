@@ -4,21 +4,25 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mvl.locationassignment.data.model.LocationInfo
-import com.mvl.locationassignment.domain.usecase.GetAddressFromCoordinatesUseCase
+import com.mvl.locationassignment.domain.usecase.GetLocationDataFromCoordinatesUseCase
+import com.mvl.locationassignment.domain.usecase.GetAqiByCityNameUseCase
 import com.mvl.locationassignment.presentation.state.ButtonState
 import com.mvl.locationassignment.presentation.state.LocationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val TAG = "LocationViewModel"
 
 @HiltViewModel
 class LocationViewModel @Inject constructor(
-    private val getAddressFromCoordinatesUseCase: GetAddressFromCoordinatesUseCase
+    private val getLocationDataFromCoordinatesUseCase: GetLocationDataFromCoordinatesUseCase,
+    private val getAqiByCityNameUseCase: GetAqiByCityNameUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LocationUiState())
@@ -30,15 +34,23 @@ class LocationViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 Log.d(TAG, "Fetching address for: $latitude, $longitude")
                 
-                val address = getAddressFromCoordinatesUseCase(latitude, longitude)
+                // Single call returns both address and city
+                val locationData = withContext(Dispatchers.IO) {
+                    getLocationDataFromCoordinatesUseCase(latitude, longitude)
+                }
                 
-                val locationInfo = LocationInfo(latitude, longitude, address)
-                Log.d(TAG, "Address fetched: $address")
+                val locationInfo = LocationInfo(latitude, longitude, locationData.fullAddress)
+                Log.d(TAG, "Address fetched: ${locationData.fullAddress}")
                 
                 _uiState.value = _uiState.value.copy(
                     currentLocationInfo = locationInfo,
+                    currentLatitude = latitude,
+                    currentLongitude = longitude,
                     isLoading = false
                 )
+                
+                // Extract city and fetch AQI if city changed
+                fetchAqiIfCityChanged(locationData.city)
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching location info", e)
                 _uiState.value = _uiState.value.copy(
@@ -46,6 +58,62 @@ class LocationViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    private fun fetchAqiIfCityChanged(newCity: String) {
+        viewModelScope.launch {
+            try {
+                val previousCity = _uiState.value.currentCity
+                Log.d(TAG, "fetchAqiIfCityChanged: Previous city='$previousCity', New city='$newCity'")
+                
+                // Normalize for comparison
+                val normalizedNewCity = newCity.trim()
+                val normalizedPreviousCity = previousCity?.trim()
+                
+                // Check if city changed (case-insensitive)
+                val cityChanged = normalizedNewCity.isNotEmpty() && 
+                                 normalizedNewCity.lowercase() != normalizedPreviousCity?.lowercase()
+                
+                if (cityChanged) {
+                    Log.d(TAG, "City changed from '$normalizedPreviousCity' to '$normalizedNewCity' - Fetching AQI")
+                    
+                    val aqiInfo = withContext(Dispatchers.IO) {
+                        getAqiByCityNameUseCase(normalizedNewCity)
+                    }
+                    
+                    updateAqiState(aqiInfo, normalizedNewCity)
+                } else {
+                    Log.d(TAG, "City unchanged - Skipping AQI API call")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching AQI", e)
+                _uiState.value = _uiState.value.copy(
+                    aqi = null,
+                    aqi_error = "NA",
+                    isAqiLoading = false
+                )
+            }
+        }
+    }
+
+    private fun updateAqiState(aqiInfo: com.mvl.locationassignment.data.model.AqiInfo, extractedCityName: String) {
+        if (aqiInfo.isError) {
+            Log.d(TAG, "AQI fetch returned error")
+            _uiState.value = _uiState.value.copy(
+                currentCity = extractedCityName,
+                aqi = null,
+                aqi_error = "NA",
+                isAqiLoading = false
+            )
+        } else {
+            Log.d(TAG, "AQI fetched: ${aqiInfo.aqi} for city: ${aqiInfo.cityName}")
+            _uiState.value = _uiState.value.copy(
+                currentCity = extractedCityName,
+                aqi = aqiInfo.aqi,
+                aqi_error = null,
+                isAqiLoading = false
+            )
         }
     }
 
