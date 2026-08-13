@@ -133,6 +133,36 @@ fun MapScreen(
                         )
                     }
                 }
+                
+                // AQI Display in top right corner
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .background(
+                            color = Color.White,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.Gray,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = if (uiState.aqi_error != null) {
+                            "AQI - NA"
+                        } else if (uiState.aqi != null) {
+                            "AQI - ${uiState.aqi}"
+                        } else {
+                            "AQI - --"
+                        },
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
             }
             
             // Bottom Control Panel - fixed height

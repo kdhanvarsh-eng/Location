@@ -13,5 +13,11 @@ data class LocationUiState(
     val buttonState: ButtonState = ButtonState.SET_A,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val selectedLocationIndex: Int? = null
+    val selectedLocationIndex: Int? = null,
+    val currentCity: String? = null,
+    val aqi: Int? = null,
+    val isAqiLoading: Boolean = false,
+    val aqi_error: String? = null,
+    val currentLatitude: Double? = null,
+    val currentLongitude: Double? = null
 )

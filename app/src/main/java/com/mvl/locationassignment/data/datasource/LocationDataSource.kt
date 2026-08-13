@@ -9,6 +9,7 @@ import javax.inject.Inject
 
 interface LocationDataSource {
     suspend fun getAddressFromCoordinates(latitude: Double, longitude: Double): String
+    suspend fun getCityFromCoordinates(latitude: Double, longitude: Double): String
 }
 
 class LocationDataSourceImpl @Inject constructor(
@@ -35,8 +36,28 @@ class LocationDataSourceImpl @Inject constructor(
                 Log.e("LocationDataSource", "Geocoder error", e)
                 "Lat: $latitude, Long: $longitude"
             }
+        }
+    }
 
-
+    override suspend fun getCityFromCoordinates(latitude: Double, longitude: Double): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context)
+                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    val addr = addresses[0]
+                    // Try to get city/locality name
+                    val city = addr.locality ?: addr.adminArea ?: ""
+                    Log.d("LocationDataSource", "Extracted city: $city from coordinates ($latitude, $longitude)")
+                    city
+                } else {
+                    Log.d("LocationDataSource", "No addresses found for coordinates ($latitude, $longitude)")
+                    ""
+                }
+            } catch (e: Exception) {
+                Log.e("LocationDataSource", "Geocoder error while extracting city", e)
+                ""
+            }
         }
     }
 }
