@@ -4,9 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mvl.locationassignment.data.model.LocationInfo
-import com.mvl.locationassignment.domain.usecase.GetAddressFromCoordinatesUseCase
-import com.mvl.locationassignment.domain.usecase.GetAqiByCityNameUseCase
-import com.mvl.locationassignment.domain.usecase.GetCityFromCoordinatesUseCase
+import com.mvl.locationassignment.domain.usecase.GetLocationDataFromCoordinatesUseCase
+import com.mvl.locationassignment.domain.usecase.GetAqiApiUseCase
 import com.mvl.locationassignment.presentation.state.ButtonState
 import com.mvl.locationassignment.presentation.state.LocationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,9 +21,8 @@ private const val TAG = "LocationViewModel"
 
 @HiltViewModel
 class LocationViewModel @Inject constructor(
-    private val getAddressFromCoordinatesUseCase: GetAddressFromCoordinatesUseCase,
-    private val getCityFromCoordinatesUseCase: GetCityFromCoordinatesUseCase,
-    private val getAqiByCityNameUseCase: GetAqiByCityNameUseCase
+    private val getLocationDataFromCoordinatesUseCase: GetLocationDataFromCoordinatesUseCase,
+    private val getAqiByCityNameUseCase: GetAqiApiUseCase // api calling
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LocationUiState())
@@ -36,10 +34,13 @@ class LocationViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 Log.d(TAG, "Fetching address for: $latitude, $longitude")
                 
-                val address = getAddressFromCoordinatesUseCase(latitude, longitude)
+                // Single call returns both address and city
+                val locationData = withContext(Dispatchers.IO) {
+                    getLocationDataFromCoordinatesUseCase(latitude, longitude)
+                }
                 
-                val locationInfo = LocationInfo(latitude, longitude, address)
-                Log.d(TAG, "Address fetched: $address")
+                val locationInfo = LocationInfo(latitude, longitude, locationData.fullAddress)
+                Log.d(TAG, "Address fetched: ${locationData.fullAddress}")
                 
                 _uiState.value = _uiState.value.copy(
                     currentLocationInfo = locationInfo,
@@ -49,7 +50,7 @@ class LocationViewModel @Inject constructor(
                 )
                 
                 // Extract city and fetch AQI if city changed
-                fetchAqiIfCityChanged(latitude, longitude)
+                fetchAqiIfCityChanged(latitude, longitude, locationData.city)
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching location info", e)
                 _uiState.value = _uiState.value.copy(
@@ -60,7 +61,7 @@ class LocationViewModel @Inject constructor(
         }
     }
 
-    private fun fetchAqiIfCityChanged(latitude: Double, longitude: Double) {
+    private fun fetchAqiIfCityChanged(latitude: Double, longitude: Double, extractedCity: String) {
         viewModelScope.launch {
             try {
                 val previousCity = _uiState.value.currentCity
@@ -68,14 +69,10 @@ class LocationViewModel @Inject constructor(
                 Log.d(TAG, "  Coordinates: lat=$latitude, lng=$longitude")
                 Log.d(TAG, "  Previous city from state: '$previousCity'")
                 
-                val newCity = withContext(Dispatchers.IO) {
-                    getCityFromCoordinatesUseCase(latitude, longitude)
-                }
-                
-                val normalizedNewCity = newCity.trim()
+                val normalizedNewCity = extractedCity.trim()
                 val normalizedPreviousCity = previousCity?.trim()
                 
-                Log.d(TAG, "  Extracted new city: '$newCity'")
+                Log.d(TAG, "  Extracted new city: '$extractedCity'")
                 Log.d(TAG, "  Normalized new city: '$normalizedNewCity'")
                 Log.d(TAG, "  Normalized previous city: '$normalizedPreviousCity'")
                 
@@ -86,7 +83,7 @@ class LocationViewModel @Inject constructor(
                 Log.d(TAG, "  City changed? $cityChanged")
                 
                 if (cityChanged) {
-                    Log.d(TAG, "✅ CITY CHANGED from '$normalizedPreviousCity' to '$normalizedNewCity' - CALLING API")
+                    Log.d(TAG, "CITY CHANGED from '$normalizedPreviousCity' to '$normalizedNewCity' - CALLING API")
                     
                     val aqiInfo = withContext(Dispatchers.IO) {
                         getAqiByCityNameUseCase(normalizedNewCity)
@@ -97,16 +94,12 @@ class LocationViewModel @Inject constructor(
                     // Store the EXTRACTED city name (not API's city name) so comparison works correctly
                     updateAqiState(aqiInfo, normalizedNewCity)
                 } else {
-                    Log.d(TAG, "⏭️ CITY UNCHANGED - SKIPPING API CALL")
-                    Log.d(TAG, "  Reason: New city matches previous (both: '$normalizedNewCity')")
+                    Log.d(TAG, "CITY UNCHANGED - SKIPPING API CALL")
+                    Log.d(TAG, " Reason: New city matches previous (both: '$normalizedNewCity')")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching AQI from coordinates", e)
-                _uiState.value = _uiState.value.copy(
-                    aqi = null,
-                    aqi_error = "NA",
-                    isAqiLoading = false
-                )
+                _uiState.value = _uiState.value.copy(aqi = null, aqi_error = "NA", isAqiLoading = false)
             }
         }
     }
@@ -114,20 +107,13 @@ class LocationViewModel @Inject constructor(
     private fun updateAqiState(aqiInfo: com.mvl.locationassignment.data.model.AqiInfo, extractedCityName: String) {
         if (aqiInfo.isError) {
             Log.d(TAG, "AQI fetch returned error for city: ${aqiInfo.cityName}")
-            _uiState.value = _uiState.value.copy(
-                currentCity = extractedCityName,  // ← Use extracted city, not API response
-                aqi = null,
-                aqi_error = "NA",
-                isAqiLoading = false
+            _uiState.value = _uiState.value.copy(currentCity = extractedCityName, aqi = null,
+                aqi_error = "NA", isAqiLoading = false
             )
         } else {
-            Log.d(TAG, "✅ AQI fetched: ${aqiInfo.aqi} for city: ${aqiInfo.cityName}")
-            _uiState.value = _uiState.value.copy(
-                currentCity = extractedCityName,  // ← Use extracted city, not API response
-                aqi = aqiInfo.aqi,
-                aqi_error = null,
-                isAqiLoading = false
-            )
+            Log.d(TAG, "AQI fetched: ${aqiInfo.aqi} for city: ${aqiInfo.cityName}")
+            _uiState.value = _uiState.value.copy(currentCity = extractedCityName, aqi = aqiInfo.aqi,
+                aqi_error = null, isAqiLoading = false)
         }
     }
 
@@ -135,11 +121,8 @@ class LocationViewModel @Inject constructor(
         Log.d(TAG, "Setting location: ${locationInfo.address}, buttonState=${uiState.value.buttonState}")
         when (uiState.value.buttonState) {
             ButtonState.SET_A -> {
-                _uiState.value = _uiState.value.copy(
-                    locationA = locationInfo,
-                    buttonState = ButtonState.SET_B,
-                    isLoading = false
-                )
+                _uiState.value = _uiState.value.copy(locationA = locationInfo, buttonState = ButtonState.SET_B,
+                    isLoading = false)
                 Log.d(TAG, "Location A saved: ${locationInfo.address}")
             }
             ButtonState.SET_B -> {

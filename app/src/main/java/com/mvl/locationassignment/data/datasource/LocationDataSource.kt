@@ -7,56 +7,56 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+private const val TAG = "LocationDataSource"
+
+data class LocationAddress(val fullAddress: String, val city: String)
+
 interface LocationDataSource {
-    suspend fun getAddressFromCoordinates(latitude: Double, longitude: Double): String
-    suspend fun getCityFromCoordinates(latitude: Double, longitude: Double): String
+    suspend fun getLocationFromCoordinates(latitude: Double, longitude: Double): LocationAddress
 }
 
 class LocationDataSourceImpl @Inject constructor(
     private val context: Context
 ) : LocationDataSource {
-    
-    override suspend fun getAddressFromCoordinates(latitude: Double, longitude: Double): String {
-        return withContext(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context)
-                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                if (!addresses.isNullOrEmpty()) {
-                    val addr = addresses[0]
-                    listOfNotNull(
-                        addr.thoroughfare,
-                        addr.locality,
-                        addr.adminArea,
-                        addr.countryName
-                    ).joinToString(", ")
-                } else {
-                    "Lat: $latitude, Long: $longitude"
-                }
-            } catch (e: Exception) {
-                Log.e("LocationDataSource", "Geocoder error", e)
-                "Lat: $latitude, Long: $longitude"
-            }
-        }
-    }
 
-    override suspend fun getCityFromCoordinates(latitude: Double, longitude: Double): String {
+    override suspend fun getLocationFromCoordinates(
+        latitude: Double,
+        longitude: Double
+    ): LocationAddress {
         return withContext(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context)
                 val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                if (!addresses.isNullOrEmpty()) {
-                    val addr = addresses[0]
-                    // Try to get city/locality name
-                    val city = addr.locality ?: addr.adminArea ?: ""
-                    Log.d("LocationDataSource", "Extracted city: $city from coordinates ($latitude, $longitude)")
-                    city
+
+                val address = addresses?.firstOrNull()
+                if (address != null) {
+                    // Full address
+                    val fullAddress = address.getAddressLine(0) ?: listOfNotNull(address.thoroughfare,
+                                address.locality, address.adminArea, address.countryName).joinToString(", ")
+
+                    // City
+                    val city =
+                        address.locality
+                            ?: address.subAdminArea
+                            ?: address.adminArea
+                            ?: ""
+
+                    Log.d(TAG, "Full Address: $fullAddress")
+                    Log.d(TAG, "City: $city")
+                    LocationAddress(fullAddress = fullAddress, city = city)
                 } else {
-                    Log.d("LocationDataSource", "No addresses found for coordinates ($latitude, $longitude)")
-                    ""
+                    Log.d(TAG, "No address found for ($latitude, $longitude)")
+                    LocationAddress(fullAddress = "Lat: $latitude, Long: $longitude", city = "")
                 }
+
             } catch (e: Exception) {
-                Log.e("LocationDataSource", "Geocoder error while extracting city", e)
-                ""
+
+                Log.e(TAG, "Geocoder error", e)
+
+                LocationAddress(
+                    fullAddress = "Lat: $latitude, Long: $longitude",
+                    city = ""
+                )
             }
         }
     }
