@@ -24,44 +24,6 @@ annotation class WaqiRetrofit
 
 private const val TAG = "NetworkModule"
 
-/**
- * Custom interceptor for detailed request/response logging
- */
-class RequestInterceptor : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
-        val request = chain.request()
-        val startTime = System.currentTimeMillis()
-        
-        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━ REQUEST ━━━━━━━━━━━━━━━━━━━━━━")
-        Log.d(TAG, "🔗 URL: ${request.url}")
-        Log.d(TAG, "📍 Method: ${request.method}")
-        Log.d(TAG, "📦 Headers: ${request.headers}")
-        
-        if (request.body != null) {
-            try {
-                val buffer = Buffer()
-                request.body!!.writeTo(buffer)
-                Log.d(TAG, "📤 Body: ${buffer.readUtf8()}")
-            } catch (e: Exception) {
-                Log.d(TAG, "📤 Body: (unable to log)")
-            }
-        }
-        
-        val response = chain.proceed(request)
-        val duration = System.currentTimeMillis() - startTime
-        
-        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━ RESPONSE ━━━━━━━━━━━━━━━━━━━━━")
-        Log.d(TAG, "✅ Status: ${response.code} ${response.message}")
-        Log.d(TAG, "⏱️  Duration: ${duration}ms")
-        Log.d(TAG, "📥 Headers: ${response.headers}")
-        
-        val responseBody = response.peekBody(Long.MAX_VALUE)
-        Log.d(TAG, "📥 Body: ${responseBody.string()}")
-        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        
-        return response
-    }
-}
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -85,20 +47,10 @@ object NetworkModule {
     @Provides
     fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(RequestInterceptor())
             .addInterceptor(loggingInterceptor)
             .build()
     }
 
-    @Singleton
-    @Provides
-    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://api.example.com/")
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
-    }
 
     @Singleton
     @Provides

@@ -18,7 +18,7 @@ interface LocationDataSource {
 class LocationDataSourceImpl @Inject constructor(
     private val context: Context
 ) : LocationDataSource {
-    
+
     private suspend fun getDataFromGeoCoder(latitude: Double, longitude: Double): Address? {
         return withContext(Dispatchers.IO) {
             try {
