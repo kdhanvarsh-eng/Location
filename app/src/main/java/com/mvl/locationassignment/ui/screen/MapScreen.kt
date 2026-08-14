@@ -60,14 +60,24 @@ private const val TAG = "MapScreen"
 @Composable
 fun MapScreen(
     viewModel: LocationViewModel = hiltViewModel(),
-    onNavigateToDetails: (Int) -> Unit
+    onNavigateToDetails: (Int) -> Unit,
+    onNavigateToBooking: () -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val bookingResponse by viewModel.bookingResponse.collectAsState()
      
     var hasLocationPermission by remember { mutableStateOf(PermissionUtils.hasLocationPermission(context)) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var centerMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
+    
+    // Navigate to booking confirmation when booking response is received
+    LaunchedEffect(bookingResponse) {
+        if (bookingResponse != null) {
+            Log.d(TAG, "✅ Booking response received, navigating to confirmation screen")
+            onNavigateToBooking()
+        }
+    }
     
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(centerMarkerPosition ?: LatLng(0.0, 0.0), 12f)
@@ -224,12 +234,21 @@ fun MapScreen(
                     // Right side: Large V Button
                     Button(
                         onClick = {
-                            Log.d(TAG, "Set button clicked - buttonState=${uiState.buttonState}, currentLocationInfo=${uiState.currentLocationInfo}")
-                            uiState.currentLocationInfo?.let { locationInfo ->
-                                Log.d(TAG, "Calling onVButtonClicked with $locationInfo")
-                                viewModel.onVButtonClicked(locationInfo)
-                            } ?: run {
-                                Log.d(TAG, "currentLocationInfo is null, cannot save")
+                            Log.d(TAG, "Button clicked - buttonState=${uiState.buttonState}")
+                            when (uiState.buttonState) {
+                                ButtonState.BOOK -> {
+                                    Log.d(TAG, "🚀 Booking trip...")
+                                    viewModel.bookTrip()
+                                    // Navigation will be handled by observing bookingResponse in parent
+                                }
+                                else -> {
+                                    uiState.currentLocationInfo?.let { locationInfo ->
+                                        Log.d(TAG, "Calling onVButtonClicked with $locationInfo")
+                                        viewModel.onVButtonClicked(locationInfo)
+                                    } ?: run {
+                                        Log.d(TAG, "currentLocationInfo is null, cannot save")
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier
