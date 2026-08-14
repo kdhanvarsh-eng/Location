@@ -32,11 +32,7 @@ class AqiDataSourceImpl @Inject constructor(
                 val retrievedCityName = response.data.city?.name ?: cityName
                 Log.d(TAG, "AQI fetched: $aqi for city: $retrievedCityName")
                 
-                AqiInfo(
-                    aqi = aqi,
-                    cityName = retrievedCityName,
-                    isError = false
-                )
+                AqiInfo(aqi = aqi, cityName = retrievedCityName, isError = false)
             } else {
                 Log.d(TAG, "API returned error status or null data")
                 AqiInfo(
