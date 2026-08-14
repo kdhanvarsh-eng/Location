@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
+    implementation("com.squareup.okhttp3:mockwebserver:4.11.0")
 
     // Google Maps
     implementation(libs.play.services.location)

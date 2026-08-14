@@ -49,15 +49,15 @@ class LocationViewModel @Inject constructor(
                 
                 val locationInfo = LocationInfo(latitude, longitude, locationData.fullAddress)
                 Log.d(TAG, "Address fetched: ${locationData.fullAddress}")
-                
+                Log.d(TAG, "City fetched: ${locationData.city}")
+
                 _uiState.value = _uiState.value.copy(
                     currentLocationInfo = locationInfo,
                     currentLatitude = latitude,
                     currentLongitude = longitude,
                     isLoading = false
                 )
-                
-                // Extract city and fetch AQI if city changed
+
                 fetchAqiIfCityChanged(locationData.city)
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching location info", e)
@@ -85,7 +85,7 @@ class LocationViewModel @Inject constructor(
                 
                 if (cityChanged) {
                     Log.d(TAG, "City changed from '$normalizedPreviousCity' to '$normalizedNewCity' - Fetching AQI")
-                    
+
                     val aqiInfo = withContext(Dispatchers.IO) {
                         getAqiByCityNameUseCase(normalizedNewCity)
                     }
