@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,16 +33,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.mvl.locationassignment.R
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -55,6 +60,8 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.mvl.locationassignment.presentation.state.ButtonState
 import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
 import com.mvl.locationassignment.utils.PermissionUtils
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 
 private const val TAG = "MapScreen"
 @Composable
@@ -74,7 +81,7 @@ fun MapScreen(
     // Navigate to booking confirmation when booking response is received
     LaunchedEffect(bookingResponse) {
         if (bookingResponse != null) {
-            Log.d(TAG, "✅ Booking response received, navigating to confirmation screen")
+            Log.d(TAG, "Booking response received, navigating to confirmation screen")
             onNavigateToBooking()
         }
     }
@@ -85,7 +92,7 @@ fun MapScreen(
     
     val markerState = rememberMarkerState(position = centerMarkerPosition ?: LatLng(0.0, 0.0))
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -118,6 +125,21 @@ fun MapScreen(
             }
         }
     }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            cameraPositionState.isMoving
+        }
+            .filter { isMoving ->
+                !isMoving
+            }
+            .collectLatest {
+                val position = cameraPositionState.position.target
+                centerMarkerPosition = position
+                markerState.position = position
+                viewModel.updateCurrentLocationInfo(position.latitude, position.longitude)
+            }
+    }
     
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -129,19 +151,23 @@ fun MapScreen(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     properties = MapProperties(mapType = MapType.NORMAL),
-                    uiSettings = MapUiSettings(zoomControlsEnabled = true),
-                    onMapClick = { latLng ->
-                       centerMarkerPosition = latLng
-                       markerState.position = latLng
-                        viewModel.updateCurrentLocationInfo(latLng.latitude, latLng.longitude)
-                    }
+                    uiSettings = MapUiSettings(zoomControlsEnabled = true)
+                )
+                
+                // Pin Icon in center
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(48.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    centerMarkerPosition?.let {
-                        Marker(
-                            state = markerState,
-                            title = "Current Location"
-                        )
-                    }
+                    Image(
+                        painter = painterResource(id = R.drawable.pin),
+                        contentDescription = "Location Pin",
+                        modifier = Modifier
+                            .size(48.dp),
+                        contentScale = ContentScale.Fit
+                    )
                 }
                 
                 // AQI Display in top right corner
@@ -243,7 +269,7 @@ fun MapScreen(
                             Log.d(TAG, "Button clicked - buttonState=${uiState.buttonState}")
                             when (uiState.buttonState) {
                                 ButtonState.BOOK -> {
-                                    Log.d(TAG, "🚀 Booking trip...")
+                                    Log.d(TAG, "Booking trip...")
                                     viewModel.bookTrip()
                                 }
                                 else -> {

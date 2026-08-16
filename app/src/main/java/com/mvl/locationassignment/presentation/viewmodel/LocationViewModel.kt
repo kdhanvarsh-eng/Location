@@ -220,7 +220,7 @@ class LocationViewModel @Inject constructor(
                     aqiB = _uiState.value.aqiB ?: 0
                 ).build()
 
-                Log.d(TAG, "📦 Booking request: A=${bookingRequest.a.name} (AQI=${bookingRequest.a.aqi}), B=${bookingRequest.b.name} (AQI=${bookingRequest.b.aqi})")
+                Log.d(TAG, "Booking request: A=${bookingRequest.a.name} (AQI=${bookingRequest.a.aqi}), B=${bookingRequest.b.name} (AQI=${bookingRequest.b.aqi})")
 
                 val response = withContext(Dispatchers.IO) {
                     bookTripUseCase(bookingRequest)
