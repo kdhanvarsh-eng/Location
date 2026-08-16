@@ -97,7 +97,6 @@ class LocationViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching AQI", e)
                 _uiState.value = _uiState.value.copy(
-                    aqi = null,
                     aqi_error = "NA",
                     isAqiLoading = false
                 )
@@ -110,18 +109,32 @@ class LocationViewModel @Inject constructor(
             Log.d(TAG, "AQI fetch returned error")
             _uiState.value = _uiState.value.copy(
                 currentCity = extractedCityName,
-                aqi = null,
                 aqi_error = "NA",
                 isAqiLoading = false
             )
         } else {
             Log.d(TAG, "AQI fetched: ${aqiInfo.aqi} for city: ${aqiInfo.cityName}")
-            _uiState.value = _uiState.value.copy(
-                currentCity = extractedCityName,
-                aqi = aqiInfo.aqi,
-                aqi_error = null,
-                isAqiLoading = false
-            )
+            // Store AQI based on current button state
+            val updatedState = when (_uiState.value.buttonState) {
+                ButtonState.SET_A -> _uiState.value.copy(
+                    currentCity = extractedCityName,
+                    aqiA = aqiInfo.aqi,
+                    aqi_error = null,
+                    isAqiLoading = false
+                )
+                ButtonState.SET_B -> _uiState.value.copy(
+                    currentCity = extractedCityName,
+                    aqiB = aqiInfo.aqi,
+                    aqi_error = null,
+                    isAqiLoading = false
+                )
+                else -> _uiState.value.copy(
+                    currentCity = extractedCityName,
+                    aqi_error = null,
+                    isAqiLoading = false
+                )
+            }
+            _uiState.value = updatedState
         }
     }
 
@@ -129,26 +142,35 @@ class LocationViewModel @Inject constructor(
         Log.d(TAG, "Setting location: ${locationInfo.address}, buttonState=${uiState.value.buttonState}")
         when (uiState.value.buttonState) {
             ButtonState.SET_A -> {
-                _uiState.value = _uiState.value.copy(
-                    locationA = locationInfo,
-                    buttonState = ButtonState.SET_B,
-                    isLoading = false
-                )
-                Log.d(TAG, "Location A saved: ${locationInfo.address}")
-            }
-            ButtonState.SET_B -> {
-                _uiState.value = _uiState.value.copy(
-                    locationB = locationInfo,
-                    buttonState = ButtonState.BOOK,
-                    isLoading = false
-                )
-                Log.d(TAG, "Location B saved: ${locationInfo.address}")
-            }
-            ButtonState.BOOK -> {
-                Log.d(TAG, "Booking completed")
-                _uiState.value = _uiState.value.copy(isLoading = false)
-            }
-        }
+               // Save the current AQI as aqiA (it was just fetched for this location)
+               _uiState.value = _uiState.value.copy(
+                   locationA = locationInfo,
+                   buttonState = ButtonState.SET_B,
+                   isLoading = false,
+                   aqiA = _uiState.value.aqiA ?: 0  // Preserve the AQI that was fetched
+               )
+               Log.d(TAG, "Location A saved: ${locationInfo.address} with AQI=${_uiState.value.aqiA}")
+           }
+           ButtonState.SET_B -> {
+               // Check if location B is same as A
+               val isSameLocation = locationInfo.latitude == _uiState.value.locationA?.latitude &&
+                                    locationInfo.longitude == _uiState.value.locationA?.longitude
+                
+               _uiState.value = _uiState.value.copy(locationB = locationInfo, buttonState = ButtonState.BOOK,
+                   isLoading = false
+               )
+                
+               // If same location, copy A's AQI to B now (since API won't be called again for same city)
+               if (isSameLocation) {
+                   Log.d(TAG, "Location B is same as A - copying AQI=${_uiState.value.aqiA} from A to B")
+                   _uiState.value = _uiState.value.copy(aqiB = _uiState.value.aqiA)
+               }
+           }
+           ButtonState.BOOK -> {
+               Log.d(TAG, "Booking completed")
+               _uiState.value = _uiState.value.copy(isLoading = false)
+           }
+       }
     }
 
     fun selectLocation(index: Int) {
@@ -194,11 +216,11 @@ class LocationViewModel @Inject constructor(
                 val bookingRequest = BookingRequestBuilder(
                     locationA = locationA,
                     locationB = locationB,
-                    aqiA = _uiState.value.aqi ?: 0,
-                    aqiB = _uiState.value.aqi ?: 0
+                    aqiA = _uiState.value.aqiA ?: 0,
+                    aqiB = _uiState.value.aqiB ?: 0
                 ).build()
 
-                Log.d(TAG, "Booking request: A=${bookingRequest.a.name}, B=${bookingRequest.b.name}")
+                Log.d(TAG, "📦 Booking request: A=${bookingRequest.a.name} (AQI=${bookingRequest.a.aqi}), B=${bookingRequest.b.name} (AQI=${bookingRequest.b.aqi})")
 
                 val response = withContext(Dispatchers.IO) {
                     bookTripUseCase(bookingRequest)

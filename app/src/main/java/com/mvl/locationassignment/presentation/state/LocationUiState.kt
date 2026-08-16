@@ -17,7 +17,8 @@ data class LocationUiState(
     val currentLatitude: Double? = null,
     val currentLongitude: Double? = null,
     val currentCity: String? = null,
-    val aqi: Int? = null,
+    val aqiA: Int? = null,
+    val aqiB: Int? = null,
     val aqi_error: String? = null,
     val isAqiLoading: Boolean = false
 )

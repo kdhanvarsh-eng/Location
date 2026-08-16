@@ -160,11 +160,17 @@ fun MapScreen(
                         )
                         .padding(12.dp)
                 ) {
+                    val currentAqi = when (uiState.buttonState) {
+                        ButtonState.SET_A -> uiState.aqiA
+                        ButtonState.SET_B -> uiState.aqiB
+                        else -> uiState.aqiB ?: uiState.aqiA
+                    }
+                    
                     Text(
                         text = if (uiState.aqi_error != null) {
                             "AQI - NA"
-                        } else if (uiState.aqi != null) {
-                            "AQI - ${uiState.aqi}"
+                        } else if (currentAqi != null) {
+                            "AQI - $currentAqi"
                         } else {
                             "AQI - --"
                         },
@@ -172,11 +178,11 @@ fun MapScreen(
                         fontWeight = FontWeight.Bold,
                         color = when {
                             uiState.aqi_error != null -> Color.Red
-                            uiState.aqi == null -> Color.Gray
-                            uiState.aqi!! < 50 -> Color.Green
-                            uiState.aqi!! < 100 -> Color(0xFFFFB74D)
-                            uiState.aqi!! < 150 -> Color(0xFFFFA726)
-                            uiState.aqi!! < 200 -> Color(0xFFEF5350)
+                            currentAqi == null -> Color.Gray
+                            currentAqi < 50 -> Color.Green
+                            currentAqi < 100 -> Color(0xFFFFB74D)
+                            currentAqi < 150 -> Color(0xFFFFA726)
+                            currentAqi < 200 -> Color(0xFFEF5350)
                             else -> Color(0xFF8B0000)
                         }
                     )
@@ -239,7 +245,6 @@ fun MapScreen(
                                 ButtonState.BOOK -> {
                                     Log.d(TAG, "🚀 Booking trip...")
                                     viewModel.bookTrip()
-                                    // Navigation will be handled by observing bookingResponse in parent
                                 }
                                 else -> {
                                     uiState.currentLocationInfo?.let { locationInfo ->
