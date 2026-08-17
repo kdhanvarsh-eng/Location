@@ -11,4 +11,8 @@ class LocationRepositoryImpl @Inject constructor(
     override suspend fun getAddressFromCoordinates(latitude: Double, longitude: Double): String {
         return locationDataSource.getAddressFromCoordinates(latitude, longitude)
     }
+
+    override suspend fun getCityFromCoordinates(latitude: Double, longitude: Double): String {
+        return locationDataSource.getCityFromCoordinates(latitude, longitude)
+    }
 }
