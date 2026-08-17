@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mvl.locationassignment.data.model.BookingRequest
+import com.mvl.locationassignment.data.model.BookingRequestBuilder
 import com.mvl.locationassignment.data.model.BookingResponse
 import com.mvl.locationassignment.domain.usecase.BookTripUseCase
 import com.mvl.locationassignment.presentation.state.BookingUiState
@@ -27,7 +28,7 @@ class BookingViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BookingUiState())
     val uiState: StateFlow<BookingUiState> = _uiState.asStateFlow()
 
-    fun bookTrip(request: BookingRequest) {
+    fun bookTrip(request: BookingRequest, requestBuilder: BookingRequestBuilder? = null) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
@@ -36,7 +37,12 @@ class BookingViewModel @Inject constructor(
                     bookTripUseCase(request)
                 }
 
-                _uiState.value = _uiState.value.copy(bookingResponse = response, isLoading = false)
+                _uiState.value = _uiState.value.copy(
+                    bookingResponse = response,
+                    isLoading = false,
+                    locationA = requestBuilder?.locationA,
+                    locationB = requestBuilder?.locationB
+                )
 
             } catch (e: Exception) {
                 Log.e(TAG, "Booking failed: ${e.message}", e)

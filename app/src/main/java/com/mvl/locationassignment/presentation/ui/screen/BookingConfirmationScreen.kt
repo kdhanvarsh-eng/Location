@@ -1,9 +1,7 @@
 package com.mvl.locationassignment.presentation.ui.screen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,38 +10,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mvl.locationassignment.R
 import com.mvl.locationassignment.data.model.BookingResponse
+import com.mvl.locationassignment.data.model.LocationInfo
 import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
 
 private const val TAG = "BookingConfirmation"
@@ -54,18 +45,18 @@ fun BookingConfirmationScreen(
     onContinue: () -> Unit,
     navController: NavHostController? = null
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
 
-    if (uiState.bookingResponse != null) {
+    val bookingResponse = uiState.bookingResponse
+
+    if (bookingResponse != null) {
         BookingConfirmationContent(
-            response = uiState.bookingResponse!!,
+            response = bookingResponse,
+            locationA = uiState.locationA,
+            locationB = uiState.locationB,
             isLoading = uiState.isLoading,
-            onContinue = onContinue,
-            onBackClick = {
-                Log.d(TAG, "Back button clicked - resetting state")
-                viewModel.resetBooking()
-                navController?.popBackStack()
-            }
+            onContinue = onContinue
         )
     }
 }
@@ -74,35 +65,12 @@ fun BookingConfirmationScreen(
 @Composable
 private fun BookingConfirmationContent(
     response: BookingResponse,
+    locationA: LocationInfo?,
+    locationB: LocationInfo?,
     isLoading: Boolean,
-    onContinue: () -> Unit,
-    onBackClick: () -> Unit = {}
+    onContinue: () -> Unit
 ) {
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.booking_confirmation),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.white)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                            tint = colorResource(R.color.white)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = colorResource(R.color.primary_green)
-                )
-            )
-        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -116,53 +84,83 @@ private fun BookingConfirmationContent(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Location A Section
-                LocationDetailSection(
-                    title = stringResource(R.string.location_a),
+
+                LocationDetailItem(
+                    label = "A",
+                    address = response.a.name,
                     aqi = response.a.aqi,
-                    name = response.a.name
+                    nickname = locationA?.nickname
+                        ?.takeIf { it.isNotBlank() } ?: "NA"
                 )
 
-                // Location B Section
-                LocationDetailSection(
-                    title = stringResource(R.string.location_b),
+                LocationDetailItem(
+                    label = "B",
+                    address = response.b.name,
                     aqi = response.b.aqi,
-                    name = response.b.name
+                    nickname = locationB?.nickname
+                        ?.takeIf {
+                            it.isNotBlank()
+                        }
+                        ?: "NA"
                 )
-
-                // Price Section
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = stringResource(R.string.price_label, response.price),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colorResource(R.color.text_dark_gray)
-                    )
-                }
             }
 
-            // Continue Button - Fixed at bottom with system navigation bar padding
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        bottom = 16.dp
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = stringResource(R.string.price),
+                    fontSize = 14.sp,
+                    color = colorResource(
+                        R.color.text_gray
+                    )
+                )
+
+                Text(
+                    text = response.price.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorResource(
+                        R.color.text_primary
+                    )
+                )
+            }
+
             Button(
                 onClick = {
-                    Log.d(TAG, "Continue clicked")
                     onContinue()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
-                    .navigationBarsPadding(),  // Automatically handles Android navigation bar
+                    .padding(
+                        start = 16.dp, end = 16.dp, bottom = 12.dp
+                    )
+                    .height(50.dp)
+                    .navigationBarsPadding(),
+
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(R.color.primary_green),
-                    contentColor = colorResource(R.color.white),
-                    disabledContainerColor = colorResource(R.color.disabled_gray)
+                    containerColor = colorResource(
+                        R.color.primary_yellow
+                    ),
+                    contentColor = colorResource(
+                        R.color.text_primary
+                    ),
+                    disabledContainerColor = colorResource(
+                        R.color.disabled_gray
+                    )
                 )
             ) {
                 if (isLoading) {
@@ -173,7 +171,7 @@ private fun BookingConfirmationContent(
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.continue_button),
+                        text = stringResource(R.string.continue_v),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -184,74 +182,89 @@ private fun BookingConfirmationContent(
 }
 
 @Composable
-private fun LocationDetailSection(
-    title: String,
-    aqi: Int,
-    name: String
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        shape = RoundedCornerShape(8.dp),
-        color = colorResource(R.color.light_background),
-        shadowElevation = 2.dp
+private fun LocationDetailItem(label: String, address: String, aqi: Int, nickname: String) {
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Title
+
             Text(
-                text = title,
+                text = label,
+                modifier = Modifier.width(50.dp),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = colorResource(R.color.text_gray)
+                fontWeight = FontWeight.Bold,
+                color = colorResource(
+                    R.color.text_primary
+                )
             )
 
-            // AQI Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.aqi_label),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colorResource(R.color.text_gray)
-                )
-                Text(
-                    text = "- $aqi",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colorResource(R.color.primary_green)
-                )
-            }
+            Text(
+                text = address,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorResource(R.color.text_primary),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
-            // Name Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.name_label),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colorResource(R.color.text_gray)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 50.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Text(
+                text = "aqi",
+                modifier = Modifier.width(180.dp),
+                fontSize = 14.sp,
+                color = colorResource(
+                    R.color.text_gray
                 )
-                Text(
-                    text = "- $name",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colorResource(R.color.text_dark_gray),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            )
+
+            Text(
+                text = aqi.toString(),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorResource(
+                    R.color.text_primary
                 )
-            }
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 50.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Text(
+                text = "nickname",
+                modifier = Modifier.width(180.dp),
+                fontSize = 14.sp,
+                color = colorResource(
+                    R.color.text_gray
+                )
+            )
+
+            Text(
+                text = nickname,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorResource(
+                    R.color.text_primary
+                )
+            )
         }
     }
 }

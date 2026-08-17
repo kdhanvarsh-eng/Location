@@ -7,5 +7,7 @@ import com.mvl.locationassignment.data.model.Trip
 data class BookingUiState(
     val bookingResponse: BookingResponse? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val locationA: LocationInfo? = null,
+    val locationB: LocationInfo? = null
 )

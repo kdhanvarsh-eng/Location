@@ -190,7 +190,7 @@ fun MapScreen(
                 ) {
                     val currentAqi = when (uiState.buttonState) {
                         ButtonState.SET_A -> uiState.aqiA
-                        ButtonState.SET_B -> uiState.aqiB
+                        ButtonState.SET_B -> uiState.aqiB ?: uiState.aqiA
                         else -> uiState.aqiB ?: uiState.aqiA
                     }
                     
@@ -275,13 +275,14 @@ fun MapScreen(
                                     val locationA = uiState.locationA
                                     val locationB = uiState.locationB
                                     if (locationA != null && locationB != null) {
-                                        val bookingRequest = BookingRequestBuilder(
+                                        val requestBuilder = BookingRequestBuilder(
                                             locationA = locationA,
                                             locationB = locationB,
                                             aqiA = uiState.aqiA ?: 0,
                                             aqiB = uiState.aqiB ?: 0
-                                        ).build()
-                                        bookingViewModel.bookTrip(bookingRequest)
+                                        )
+                                        val bookingRequest = requestBuilder.build()
+                                        bookingViewModel.bookTrip(bookingRequest, requestBuilder)
                                     } else {
                                         Log.e(TAG, "Cannot book: Location A or B is null")
                                     }

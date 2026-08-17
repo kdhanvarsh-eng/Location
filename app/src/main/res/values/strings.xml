@@ -14,6 +14,7 @@
     <string name="name_label">Name</string>
     <string name="price_label">Price - ₹%d</string>
     <string name="continue_button">Continue</string>
+    <string name="continue_v">V</string>
 
     <!-- TripDetailsScreen -->
     <string name="trip_details">Trip Details</string>
@@ -37,4 +38,5 @@
     <string name="error_label">Error: %s</string>
     <string name="nickname_label">Add Nickname (Optional, Max 20 characters)</string>
     <string name="nickname_counter">%d/20</string>
+    <string name="price">price</string>
 </resources>
