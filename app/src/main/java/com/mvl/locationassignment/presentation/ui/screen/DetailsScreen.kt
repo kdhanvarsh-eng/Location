@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -102,7 +103,7 @@ fun DetailsScreen(
                         .fillMaxWidth()
                         .padding(24.dp)
                         .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
                         text = "$label  ${selectedLocation.address}",
@@ -110,17 +111,23 @@ fun DetailsScreen(
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
                         color = colorResource(R.color.text_primary)
                     )
-                    Text(
-                        text = "aqi",
-                        fontSize = 12.sp,
-                        color = colorResource(R.color.text_gray)
-                    )
-                    Text(
-                        text = "${selectedAqi ?: 0}",
-                        fontSize = 16.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
-                        color = colorResource(R.color.text_primary)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "aqi",
+                            fontSize = 12.sp,
+                            color = colorResource(R.color.text_gray)
+                        )
+                        Text(
+                            text = "${selectedAqi ?: 0}",
+                            fontSize = 16.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
+                            color = colorResource(R.color.text_primary)
+                        )
+                    }
                 }
             } else {
                 Text(
@@ -143,11 +150,6 @@ fun DetailsScreen(
                         .imePadding(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.nickname_label),
-                        fontSize = 12.sp,
-                        color = colorResource(R.color.text_gray)
-                    )
                     OutlinedTextField(
                         value = nicknameInput,
                         onValueChange = { newValue ->
