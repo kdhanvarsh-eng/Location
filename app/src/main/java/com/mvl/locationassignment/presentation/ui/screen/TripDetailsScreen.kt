@@ -1,6 +1,7 @@
 package com.mvl.locationassignment.presentation.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,41 +54,67 @@ fun TripDetailsScreen(
         viewModel.fetchTrips(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1)
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .statusBarsPadding()
     ) {
-        when {
-            uiState.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = colorResource(R.color.primary_green)
-                )
-            }
-            uiState.error != null -> {
-                Text(
-                    text = uiState.error ?: "Something went wrong",
-                    modifier = Modifier.align(Alignment.Center)
-                        .padding(24.dp),
-                    fontSize = 14.sp,
-                    color = colorResource(R.color.error_red)
-                )
-            }
+        // Header with back arrow
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                modifier = Modifier
+                    .width(24.dp)
+                    .height(24.dp)
+                    .clickable {
+                        onNavigateBack()
+                    },
+                tint = Color.Black
+            )
+        }
 
-            else -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    TripSummarySection(
-                        totalCount = uiState.trips.size,
-                        totalPrice = uiState.totalPrice
+        // Content
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+        ) {
+            when {
+                uiState.isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = colorResource(R.color.primary_green)
                     )
-                    Spacer(
+                }
+                uiState.error != null -> {
+                    Text(
+                        text = uiState.error ?: "Something went wrong",
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .background(color = Color(0xFFF4F4F4))
+                            .align(Alignment.Center)
+                            .padding(24.dp),
+                        fontSize = 14.sp,
+                        color = colorResource(R.color.error_red)
                     )
+                }
+
+                else -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        TripSummarySection(
+                            totalCount = uiState.trips.size,
+                            totalPrice = uiState.totalPrice
+                        )
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .background(color = Color(0xFFF4F4F4))
+                        )
 
                     LazyColumn(
                         modifier = Modifier
@@ -106,14 +136,15 @@ fun TripDetailsScreen(
                                 locationBLabel = locationBLabel
                             )
 
-                            if (index < uiState.trips.lastIndex) {
-                                Spacer(
-                                    modifier = Modifier
-                                        .padding(top = 8.dp)
-                                        .fillMaxWidth()
-                                        .height(2.dp)
-                                        .background(Color(0xFFF4F4F4))
-                                )
+                                if (index < uiState.trips.lastIndex) {
+                                    Spacer(
+                                        modifier = Modifier
+                                            .padding(top = 8.dp)
+                                            .fillMaxWidth()
+                                            .height(2.dp)
+                                            .background(Color(0xFFF4F4F4))
+                                    )
+                                }
                             }
                         }
                     }
@@ -128,8 +159,8 @@ private fun TripSummarySection(totalCount: Int, totalPrice: Int) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
-                .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 20.dp),
+                .height(100.dp)
+                .padding(start = 32.dp, end = 32.dp, top = 8.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
