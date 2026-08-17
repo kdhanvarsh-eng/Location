@@ -36,10 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.mvl.locationassignment.R
 import com.mvl.locationassignment.data.model.BookingResponse
 import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
 
@@ -80,23 +83,23 @@ private fun BookingConfirmationContent(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Booking Confirmation",
+                        stringResource(R.string.booking_confirmation),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = colorResource(R.color.white)
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
+                            contentDescription = stringResource(R.string.back),
+                            tint = colorResource(R.color.white)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Green
+                    containerColor = colorResource(R.color.primary_green)
                 )
             )
         }
@@ -104,7 +107,7 @@ private fun BookingConfirmationContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(colorResource(R.color.white))
                 .padding(paddingValues)
         ) {
             // Scrollable content
@@ -116,14 +119,14 @@ private fun BookingConfirmationContent(
             ) {
                 // Location A Section
                 LocationDetailSection(
-                    title = "Location A",
+                    title = stringResource(R.string.location_a),
                     aqi = response.a.aqi,
                     name = response.a.name
                 )
 
                 // Location B Section
                 LocationDetailSection(
-                    title = "Location B",
+                    title = stringResource(R.string.location_b),
                     aqi = response.b.aqi,
                     name = response.b.name
                 )
@@ -136,10 +139,10 @@ private fun BookingConfirmationContent(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
-                        text = "Price - ₹${response.price}",
+                        text = stringResource(R.string.price_label, response.price),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.DarkGray
+                        color = colorResource(R.color.text_dark_gray)
                     )
                 }
             }
@@ -157,20 +160,20 @@ private fun BookingConfirmationContent(
                     .navigationBarsPadding(),  // Automatically handles Android navigation bar
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Green,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color.Gray
+                    containerColor = colorResource(R.color.primary_green),
+                    contentColor = colorResource(R.color.white),
+                    disabledContainerColor = colorResource(R.color.disabled_gray)
                 )
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = Color.White,
+                        color = colorResource(R.color.white),
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
-                        text = "Continue",
+                        text = stringResource(R.string.continue_button),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -191,7 +194,7 @@ private fun LocationDetailSection(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         shape = RoundedCornerShape(8.dp),
-        color = Color(0xFFF9F9F9),
+        color = colorResource(R.color.light_background),
         shadowElevation = 2.dp
     ) {
         Column(
@@ -205,7 +208,7 @@ private fun LocationDetailSection(
                 text = title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Gray
+                color = colorResource(R.color.text_gray)
             )
 
             // AQI Row
@@ -215,16 +218,16 @@ private fun LocationDetailSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "AQI",
+                    text = stringResource(R.string.aqi_label),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Gray
+                    color = colorResource(R.color.text_gray)
                 )
                 Text(
                     text = "- $aqi",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Green
+                    color = colorResource(R.color.primary_green)
                 )
             }
 
@@ -235,16 +238,16 @@ private fun LocationDetailSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Name",
+                    text = stringResource(R.string.name_label),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Gray
+                    color = colorResource(R.color.text_gray)
                 )
                 Text(
                     text = "- $name",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray,
+                    color = colorResource(R.color.text_dark_gray),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

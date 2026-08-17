@@ -31,9 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.mvl.locationassignment.R
 import com.mvl.locationassignment.data.model.Trip
 import com.mvl.locationassignment.presentation.viewmodel.TripHistoryViewModel
 import java.util.Calendar
@@ -57,10 +60,10 @@ fun TripDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Trip Details") },
+                title = { Text(stringResource(R.string.trip_details)) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Green,
-                    titleContentColor = Color.White
+                    containerColor = colorResource(R.color.primary_green),
+                    titleContentColor = colorResource(R.color.white)
                 )
             )
         }
@@ -68,13 +71,13 @@ fun TripDetailsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(colorResource(R.color.white))
                 .padding(paddingValues)
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = Color.Green
+                    color = colorResource(R.color.primary_green)
                 )
             } else if (uiState.error != null) {
                 Column(
@@ -84,19 +87,19 @@ fun TripDetailsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Error: ${uiState.error}",
-                        color = Color.Red,
+                        text = stringResource(R.string.error_label, uiState.error ?: ""),
+                        color = colorResource(R.color.error_red),
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = onNavigateBack,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Green,
-                            contentColor = Color.White
+                            containerColor = colorResource(R.color.primary_green),
+                            contentColor = colorResource(R.color.white)
                         )
                     ) {
-                        Text("Go Back")
+                        Text(stringResource(R.string.go_back))
                     }
                 }
             } else {
@@ -112,23 +115,23 @@ fun TripDetailsScreen(
                             .padding(bottom = 16.dp),
                         shape = RoundedCornerShape(8.dp),
                         shadowElevation = 4.dp,
-                        color = Color.White
+                        color = colorResource(R.color.dark_gray)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "Total Count: ${uiState.trips.size}",
+                                text = stringResource(R.string.total_count, uiState.trips.size),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = colorResource(R.color.white)
                             )
                             Text(
-                                text = "Total Price: ₹${uiState.totalPrice}",
+                                text = stringResource(R.string.total_price, uiState.totalPrice),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Green
+                                color = colorResource(R.color.primary_green)
                             )
                         }
                     }
@@ -151,13 +154,13 @@ fun TripDetailsScreen(
                             .height(48.dp)
                             .padding(top = 16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Green,
-                            contentColor = Color.White
+                            containerColor = colorResource(R.color.primary_green),
+                            contentColor = colorResource(R.color.white)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Go Back",
+                            text = stringResource(R.string.go_back),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -175,7 +178,7 @@ fun TripItem(trip: Trip) {
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 2.dp,
-        color = Color.White
+        color = colorResource(R.color.dark_gray)
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
@@ -189,38 +192,38 @@ fun TripItem(trip: Trip) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "A - ${trip.a.name}",
+                        text = stringResource(R.string.trip_location_a, trip.a.name),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black,
+                        color = colorResource(R.color.white),
                         maxLines = 1
                     )
                     Text(
-                        text = "AQI: ${trip.a.aqi}",
+                        text = stringResource(R.string.aqi_value, trip.a.aqi),
                         fontSize = 11.sp,
-                        color = Color.Gray
+                        color = colorResource(R.color.gray)
                     )
                 }
                 Text(
-                    text = "₹${trip.price}",
+                    text = stringResource(R.string.trip_price, trip.price),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Green
+                    color = colorResource(R.color.primary_green)
                 )
             }
             
             Column {
                 Text(
-                    text = "B - ${trip.b.name}",
+                    text = stringResource(R.string.trip_location_b, trip.b.name),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black,
+                    color = colorResource(R.color.white),
                     maxLines = 1
                 )
                 Text(
-                    text = "AQI: ${trip.b.aqi}",
+                    text = stringResource(R.string.aqi_value, trip.b.aqi),
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = colorResource(R.color.gray)
                 )
             }
         }

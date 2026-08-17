@@ -1,3 +1,40 @@
 <resources>
     <string name="app_name">Location Assignment</string>
+
+    <!-- MapScreen -->
+    <string name="set_a">Set A</string>
+    <string name="set_b">Set B</string>
+    <string name="book">Book</string>
+
+    <!-- BookingConfirmationScreen -->
+    <string name="booking_confirmation">Booking Confirmation</string>
+    <string name="location_a">Location A</string>
+    <string name="location_b">Location B</string>
+    <string name="aqi_label">AQI</string>
+    <string name="name_label">Name</string>
+    <string name="price_label">Price - ₹%d</string>
+    <string name="continue_button">Continue</string>
+
+    <!-- TripDetailsScreen -->
+    <string name="trip_details">Trip Details</string>
+    <string name="total_count">Total Count: %d</string>
+    <string name="total_price">Total Price: ₹%d</string>
+    <string name="go_back">Go Back</string>
+    <string name="back">Back</string>
+    <string name="trip_location_a">A - %s</string>
+    <string name="trip_location_b">B - %s</string>
+    <string name="aqi_value">AQI: %d</string>
+    <string name="trip_price">₹%d</string>
+
+    <!-- DetailsScreen -->
+    <string name="location_details">Location Details</string>
+    <string name="latitude">Latitude: %f</string>
+    <string name="longitude">Longitude: %f</string>
+    <string name="address">Address: %s</string>
+    <string name="no_location_data">No location data available for index %d</string>
+
+    <!-- Error Messages -->
+    <string name="error_label">Error: %s</string>
+    <string name="nickname_label">Add Nickname (Optional, Max 20 characters)</string>
+    <string name="nickname_counter">%d/20</string>
 </resources>

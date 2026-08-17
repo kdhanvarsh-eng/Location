@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -315,9 +316,9 @@ fun MapScreen(
                         } else {
                             Text(
                                 text = when (uiState.buttonState) {
-                                    ButtonState.SET_A -> "Set A"
-                                    ButtonState.SET_B -> "Set B"
-                                    ButtonState.BOOK -> "Book"
+                                    ButtonState.SET_A -> stringResource(R.string.set_a)
+                                    ButtonState.SET_B -> stringResource(R.string.set_b)
+                                    ButtonState.BOOK -> stringResource(R.string.book)
                                 },
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,

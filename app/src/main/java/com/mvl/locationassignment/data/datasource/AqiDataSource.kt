@@ -1,11 +1,11 @@
 package com.mvl.locationassignment.data.datasource
 
 import android.util.Log
+import com.mvl.locationassignment.BuildConfig
 import com.mvl.locationassignment.data.api.WaqiApiService
 import com.mvl.locationassignment.data.model.AqiInfo
 import javax.inject.Inject
 
-const val WAQI_TOKEN = "848555b3533c4aeb24a60d3eed69c280fd80d796"
 private const val TAG = "AqiDataSource"
 
 interface AqiDataSource {
@@ -22,7 +22,7 @@ class AqiDataSourceImpl @Inject constructor(
             
             val response = waqiApiService.getAqiByCity(
                 city = cityName,
-                token = WAQI_TOKEN
+                token = BuildConfig.WAQI_API_KEY
             )
 
             if (response.status == "ok" && response.data != null) {
