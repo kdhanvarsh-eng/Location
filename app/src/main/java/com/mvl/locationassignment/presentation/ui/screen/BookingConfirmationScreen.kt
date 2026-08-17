@@ -1,4 +1,4 @@
-package com.mvl.locationassignment.ui.screen
+package com.mvl.locationassignment.presentation.ui.screen
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -40,22 +41,21 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mvl.locationassignment.data.model.BookingResponse
-import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
+import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
 
 private const val TAG = "BookingConfirmation"
 
 @Composable
 fun BookingConfirmationScreen(
-    viewModel: LocationViewModel = hiltViewModel(),
+    viewModel: BookingViewModel = hiltViewModel(),
     onContinue: () -> Unit,
     navController: NavHostController? = null
 ) {
-    val bookingResponse by viewModel.bookingResponse.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
-    if (bookingResponse != null) {
+    if (uiState.bookingResponse != null) {
         BookingConfirmationContent(
-            response = bookingResponse!!,
+            response = uiState.bookingResponse!!,
             isLoading = uiState.isLoading,
             onContinue = onContinue,
             onBackClick = {
@@ -190,7 +190,7 @@ private fun LocationDetailSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(8.dp),
         color = Color(0xFFF9F9F9),
         shadowElevation = 2.dp
     ) {
@@ -246,7 +246,7 @@ private fun LocationDetailSection(
                     fontWeight = FontWeight.Bold,
                     color = Color.DarkGray,
                     maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

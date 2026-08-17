@@ -1,6 +1,5 @@
-package com.mvl.locationassignment.ui.theme
+package com.mvl.locationassignment.presentation.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

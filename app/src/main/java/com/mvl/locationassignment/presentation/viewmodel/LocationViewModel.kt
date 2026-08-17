@@ -3,11 +3,7 @@ package com.mvl.locationassignment.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mvl.locationassignment.data.model.BookingRequest
-import com.mvl.locationassignment.data.model.BookingRequestBuilder
-import com.mvl.locationassignment.data.model.BookingResponse
 import com.mvl.locationassignment.data.model.LocationInfo
-import com.mvl.locationassignment.domain.usecase.BookTripUseCase
 import com.mvl.locationassignment.domain.usecase.GetLocationDataFromCoordinatesUseCase
 import com.mvl.locationassignment.domain.usecase.GetAqiByCityNameUseCase
 import com.mvl.locationassignment.presentation.state.ButtonState
@@ -26,15 +22,11 @@ private const val TAG = "LocationViewModel"
 @HiltViewModel
 class LocationViewModel @Inject constructor(
     private val getLocationDataFromCoordinatesUseCase: GetLocationDataFromCoordinatesUseCase,
-    private val getAqiByCityNameUseCase: GetAqiByCityNameUseCase,
-    private val bookTripUseCase: BookTripUseCase
+    private val getAqiByCityNameUseCase: GetAqiByCityNameUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LocationUiState())
     val uiState: StateFlow<LocationUiState> = _uiState.asStateFlow()
-
-    private val _bookingResponse = MutableStateFlow<BookingResponse?>(null)
-    val bookingResponse: StateFlow<BookingResponse?> = _bookingResponse.asStateFlow()
 
     fun updateCurrentLocationInfo(latitude: Double, longitude: Double) {
         viewModelScope.launch {
@@ -198,50 +190,7 @@ class LocationViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(error = null)
     }
 
-    fun bookTrip() {
-        viewModelScope.launch {
-            try {
-                val locationA = _uiState.value.locationA
-                val locationB = _uiState.value.locationB
-
-                if (locationA == null || locationB == null) {
-                    Log.e(TAG, "Cannot book: Location A or B is null")
-                    _uiState.value = _uiState.value.copy(error = "Both locations must be set to book")
-                    return@launch
-                }
-
-                _uiState.value = _uiState.value.copy(isLoading = true)
-
-                // Use BookingRequestBuilder to create the booking request
-                val bookingRequest = BookingRequestBuilder(
-                    locationA = locationA,
-                    locationB = locationB,
-                    aqiA = _uiState.value.aqiA ?: 0,
-                    aqiB = _uiState.value.aqiB ?: 0
-                ).build()
-
-                Log.d(TAG, "Booking request: A=${bookingRequest.a.name} (AQI=${bookingRequest.a.aqi}), B=${bookingRequest.b.name} (AQI=${bookingRequest.b.aqi})")
-
-                val response = withContext(Dispatchers.IO) {
-                    bookTripUseCase(bookingRequest)
-                }
-
-                Log.d(TAG, "Booking confirmed - Price: ${response.price}")
-                _bookingResponse.value = response
-                _uiState.value = _uiState.value.copy(isLoading = false)
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Booking failed: ${e.message}", e)
-                _uiState.value = _uiState.value.copy(
-                    error = "Booking failed: ${e.message}",
-                    isLoading = false
-                )
-            }
-        }
-    }
-
-    fun resetBooking() {
-        _bookingResponse.value = null
+    fun resetLocationState() {
         _uiState.value = LocationUiState()
     }
 }

@@ -1,6 +1,5 @@
-package com.mvl.locationassignment.ui.screen
+package com.mvl.locationassignment.presentation.ui.screen
 
-import android.Manifest
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,7 +25,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,11 +53,12 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.mvl.locationassignment.presentation.state.ButtonState
 import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
+import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
+import com.mvl.locationassignment.data.model.BookingRequestBuilder
 import com.mvl.locationassignment.utils.PermissionUtils
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -67,20 +67,21 @@ private const val TAG = "MapScreen"
 @Composable
 fun MapScreen(
     viewModel: LocationViewModel = hiltViewModel(),
+    bookingViewModel: BookingViewModel = hiltViewModel(),
     onNavigateToDetails: (Int) -> Unit,
     onNavigateToBooking: () -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val bookingResponse by viewModel.bookingResponse.collectAsState()
+    val bookingUiState by bookingViewModel.uiState.collectAsState()
      
     var hasLocationPermission by remember { mutableStateOf(PermissionUtils.hasLocationPermission(context)) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var centerMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
     
     // Navigate to booking confirmation when booking response is received
-    LaunchedEffect(bookingResponse) {
-        if (bookingResponse != null) {
+    LaunchedEffect(bookingUiState.bookingResponse) {
+        if (bookingUiState.bookingResponse != null) {
             Log.d(TAG, "Booking response received, navigating to confirmation screen")
             onNavigateToBooking()
         }
@@ -270,7 +271,19 @@ fun MapScreen(
                             when (uiState.buttonState) {
                                 ButtonState.BOOK -> {
                                     Log.d(TAG, "Booking trip...")
-                                    viewModel.bookTrip()
+                                    val locationA = uiState.locationA
+                                    val locationB = uiState.locationB
+                                    if (locationA != null && locationB != null) {
+                                        val bookingRequest = BookingRequestBuilder(
+                                            locationA = locationA,
+                                            locationB = locationB,
+                                            aqiA = uiState.aqiA ?: 0,
+                                            aqiB = uiState.aqiB ?: 0
+                                        ).build()
+                                        bookingViewModel.bookTrip(bookingRequest)
+                                    } else {
+                                        Log.e(TAG, "Cannot book: Location A or B is null")
+                                    }
                                 }
                                 else -> {
                                     uiState.currentLocationInfo?.let { locationInfo ->
@@ -285,7 +298,7 @@ fun MapScreen(
                         modifier = Modifier
                             .width(80.dp)
                             .fillMaxHeight(),
-                        enabled = !uiState.isLoading && centerMarkerPosition != null && uiState.currentLocationInfo != null,
+                        enabled = !uiState.isLoading && !bookingUiState.isLoading && centerMarkerPosition != null && uiState.currentLocationInfo != null,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFFC107), // Golden/Yellow color
                             contentColor = Color.Black,
@@ -293,7 +306,7 @@ fun MapScreen(
                         ),
                         shape = RoundedCornerShape(6.dp)
                     ) {
-                        if (uiState.isLoading) {
+                        if (uiState.isLoading || (uiState.buttonState == ButtonState.BOOK && bookingUiState.isLoading)) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 color = Color.Black,
@@ -308,7 +321,7 @@ fun MapScreen(
                                 },
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                textAlign = TextAlign.Center,
                                 maxLines = 1
                             )
                         }

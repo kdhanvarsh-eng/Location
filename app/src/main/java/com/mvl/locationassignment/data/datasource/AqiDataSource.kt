@@ -24,9 +24,7 @@ class AqiDataSourceImpl @Inject constructor(
                 city = cityName,
                 token = WAQI_TOKEN
             )
-            
-            Log.d(TAG, "AQI Response status: ${response.status}")
-            
+
             if (response.status == "ok" && response.data != null) {
                 val aqi = response.data.aqi
                 val retrievedCityName = response.data.city?.name ?: cityName

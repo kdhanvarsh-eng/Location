@@ -1,4 +1,4 @@
-package com.mvl.locationassignment.ui.screen
+package com.mvl.locationassignment.presentation.ui.screen
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
