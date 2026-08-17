@@ -96,7 +96,7 @@ private fun BookingConfirmationContent(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF4CAF50)
+                    containerColor = Color.Green
                 )
             )
         }
@@ -157,7 +157,7 @@ private fun BookingConfirmationContent(
                     .navigationBarsPadding(),  // Automatically handles Android navigation bar
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50),
+                    containerColor = Color.Green,
                     contentColor = Color.White,
                     disabledContainerColor = Color.Gray
                 )
@@ -224,7 +224,7 @@ private fun LocationDetailSection(
                     text = "- $aqi",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4CAF50)
+                    color = Color.Green
                 )
             }
 

@@ -9,6 +9,7 @@ import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
 import com.mvl.locationassignment.ui.screen.BookingConfirmationScreen
 import com.mvl.locationassignment.ui.screen.DetailsScreen
 import com.mvl.locationassignment.ui.screen.MapScreen
+import com.mvl.locationassignment.ui.screen.TripDetailsScreen
 
 @Composable
 fun NavigationHost(navController: NavHostController) {
@@ -44,12 +45,20 @@ fun NavigationHost(navController: NavHostController) {
             BookingConfirmationScreen(
                 viewModel = viewModel,
                 onContinue = {
-                    viewModel.resetBooking()
-                    navController.navigate(Screen.MapScreen.route) {
-                        popUpTo(Screen.BookingConfirmationScreen.route) { inclusive = true }
-                    }
+                    // Navigate to Trip Details instead of back to map
+                    navController.navigate(Screen.TripDetailsScreen.route)
                 },
                 navController = navController
+            )
+        }
+        composable(Screen.TripDetailsScreen.route) {
+            TripDetailsScreen(
+                onNavigateBack = {
+                    viewModel.resetBooking()
+                    navController.navigate(Screen.MapScreen.route) {
+                        popUpTo(Screen.TripDetailsScreen.route) { inclusive = true }
+                    }
+                }
             )
         }
     }

@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.mvl.locationassignment.data.api.BookingApiService
+import com.mvl.locationassignment.data.api.TripApiService
 import com.mvl.locationassignment.data.api.WaqiApiService
 import com.mvl.locationassignment.network.MockWebServerManager
 import dagger.Module
@@ -92,5 +93,11 @@ object NetworkModule {
     @Provides
     fun provideBookingApiService(retrofit: Retrofit): BookingApiService {
         return retrofit.create(BookingApiService::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideTripApiService(retrofit: Retrofit): TripApiService {
+        return retrofit.create(TripApiService::class.java)
     }
 }

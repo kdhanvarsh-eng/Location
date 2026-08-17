@@ -26,7 +26,7 @@ class LocationAssignmentApp : Application(), ComponentCallbacks2 {
         }
     }
 
-    // this is optional since we are using MockWebServer for testing purposes and not in production
+    // this is optional since we are using MockWebServer for testing purposes
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         // Stop the MockWebServer when the app is being trimmed aggressively
@@ -40,7 +40,7 @@ class LocationAssignmentApp : Application(), ComponentCallbacks2 {
             }
         }
     }
-    // this is optional since we are using MockWebServer for testing purposes and not in production
+    // this is optional since we are using MockWebServer for testing purposes
     override fun onLowMemory() {
         super.onLowMemory()
         try {

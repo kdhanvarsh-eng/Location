@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.mvl.locationassignment.data.model.BookingRequest
 import com.mvl.locationassignment.data.model.BookingResponse
+import com.mvl.locationassignment.data.model.MockTripData
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -60,8 +61,8 @@ class MockWebServerManager @Inject constructor(
     }
 
     private fun setupBookingEndpoint() {
-        // Set up queue dispatcher to handle booking requests
-        mockWebServer.dispatcher = MockBookingApi(gson)
+        // Set up queue dispatcher to handle booking and trip requests
+        mockWebServer.dispatcher = MockTripApi(gson)
     }
 
     fun getBaseUrl(): String {
@@ -70,13 +71,12 @@ class MockWebServerManager @Inject constructor(
 
 }
 
-class MockBookingApi(private val gson: Gson) : okhttp3.mockwebserver.Dispatcher() {
+class MockTripApi(private val gson: Gson) : okhttp3.mockwebserver.Dispatcher() {
     
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.path ?: return MockResponse().setResponseCode(404)
         
-
-        Log.d(TAG, " MockWebServer Request:")
+        Log.d(TAG, "MockWebServer Request:")
         Log.d(TAG, "Method: ${request.method}")
         Log.d(TAG, "Path: $path")
         
@@ -84,8 +84,11 @@ class MockBookingApi(private val gson: Gson) : okhttp3.mockwebserver.Dispatcher(
             request.method == "POST" && path == "/books" -> {
                 handleBookingRequest(request)
             }
+            request.method == "GET" && path.startsWith("/books") -> {
+                handleGetTripsRequest(request)
+            }
             else -> {
-                Log.d(TAG, "No handler for: ${request.method} $path")
+                Log.d(TAG, " No handler for: ${request.method} $path")
                 MockResponse().setResponseCode(404).setBody("Not Found")
             }
         }
@@ -120,6 +123,38 @@ class MockBookingApi(private val gson: Gson) : okhttp3.mockwebserver.Dispatcher(
                 .setBody(responseBody)
         } catch (e: Exception) {
             Log.e(TAG, " Error handling booking request: ${e.message}", e)
+            MockResponse()
+                .setResponseCode(400)
+                .addHeader("Content-Type", "application/json")
+                .setBody("""{"error":"${e.message}"}""")
+        }
+    }
+
+    private fun handleGetTripsRequest(request: RecordedRequest): MockResponse {
+        return try {
+            val year = request.requestUrl?.queryParameter("year") ?: "2020"
+            val month = request.requestUrl?.queryParameter("month") ?: "11"
+            
+            Log.d(TAG, "📥 GET /books?year=$year&month=$month")
+            
+            // Simulate processing delay
+            Log.d(TAG, "⏳ Processing for 1 second...")
+            Thread.sleep(1000)
+            Log.d(TAG, "✅ Processing complete")
+            
+            // Mock trip data from MockTripData
+            val trips = MockTripData.getDefaultTrips()
+            
+            val responseBody = gson.toJson(trips)
+            Log.d(TAG, "📤 RESPONSE BODY:")
+            Log.d(TAG, responseBody)
+            
+            MockResponse()
+                .setResponseCode(200)
+                .addHeader("Content-Type", "application/json")
+                .setBody(responseBody)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error handling GET trips request: ${e.message}", e)
             MockResponse()
                 .setResponseCode(400)
                 .addHeader("Content-Type", "application/json")
