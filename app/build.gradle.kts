@@ -28,7 +28,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Add API key to BuildConfig
-        buildConfigField("String", "WAQI_API_KEY", "\"${localProperties.getProperty("waqi.api.key", "")}\"")
+        buildConfigField("String", "AQI_API_KEY", "\"${localProperties.getProperty("aqi.api.key", "")}\"")
     }
 
     buildTypes {

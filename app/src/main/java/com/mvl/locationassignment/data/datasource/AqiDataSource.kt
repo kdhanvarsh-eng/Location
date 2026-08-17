@@ -22,7 +22,7 @@ class AqiDataSourceImpl @Inject constructor(
             
             val response = waqiApiService.getAqiByCity(
                 city = cityName,
-                token = BuildConfig.WAQI_API_KEY
+                token = BuildConfig.AQI_API_KEY
             )
 
             if (response.status == "ok" && response.data != null) {
