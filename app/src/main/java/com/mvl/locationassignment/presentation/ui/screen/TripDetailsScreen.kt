@@ -10,18 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,13 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.res.stringResource
 import com.mvl.locationassignment.R
 import com.mvl.locationassignment.data.model.Trip
 import com.mvl.locationassignment.presentation.viewmodel.TripHistoryViewModel
@@ -43,127 +38,84 @@ import java.util.Calendar
 
 private const val TAG = "TripDetailsScreen"
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripDetailsScreen(
     viewModel: TripHistoryViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
-    // Fetch trips on screen load (current year and month)
+
     LaunchedEffect(Unit) {
         val calendar = Calendar.getInstance()
         viewModel.fetchTrips(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1)
     }
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.trip_details)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorResource(R.color.primary_green),
-                    titleContentColor = colorResource(R.color.white)
-                )
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorResource(R.color.white))
-                .padding(paddingValues)
-        ) {
-            if (uiState.isLoading) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .statusBarsPadding()
+    ) {
+        when {
+            uiState.isLoading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = colorResource(R.color.primary_green)
                 )
-            } else if (uiState.error != null) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(R.string.error_label, uiState.error ?: ""),
-                        color = colorResource(R.color.error_red),
-                        textAlign = TextAlign.Center
+            }
+            uiState.error != null -> {
+                Text(
+                    text = uiState.error ?: "Something went wrong",
+                    modifier = Modifier.align(Alignment.Center)
+                        .padding(24.dp),
+                    fontSize = 14.sp,
+                    color = colorResource(R.color.error_red)
+                )
+            }
+
+            else -> {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    TripSummarySection(
+                        totalCount = uiState.trips.size,
+                        totalPrice = uiState.totalPrice
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = onNavigateBack,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(R.color.primary_green),
-                            contentColor = colorResource(R.color.white)
-                        )
-                    ) {
-                        Text(stringResource(R.string.go_back))
-                    }
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    // Summary Section
-                    Surface(
+                    Spacer(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        shadowElevation = 4.dp,
-                        color = colorResource(R.color.dark_gray)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.total_count, uiState.trips.size),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = colorResource(R.color.white)
-                            )
-                            Text(
-                                text = stringResource(R.string.total_price, uiState.totalPrice),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = colorResource(R.color.primary_green)
-                            )
-                        }
-                    }
-                    
-                    // Trips List
+                            .height(6.dp)
+                            .background(color = Color(0xFFF4F4F4))
+                    )
+
                     LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.trips) { trip ->
-                            TripItem(trip)
-                        }
-                    }
-                    
-                    // Back Button
-                    Button(
-                        onClick = onNavigateBack,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
-                            .padding(top = 16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(R.color.primary_green),
-                            contentColor = colorResource(R.color.white)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                            .padding(top = 6.dp)
+                            .weight(1f)
                     ) {
-                        Text(
-                            text = stringResource(R.string.go_back),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+
+                        itemsIndexed(
+                            items = uiState.trips
+                        ) {
+                            index, trip ->
+                            val locationALabel = getLocationLabel(index * 2)
+                            val locationBLabel = getLocationLabel(index * 2 + 1)
+
+                            TripItem(
+                                trip = trip,
+                                locationALabel = locationALabel,
+                                locationBLabel = locationBLabel
+                            )
+
+                            if (index < uiState.trips.lastIndex) {
+                                Spacer(
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .fillMaxWidth()
+                                        .height(2.dp)
+                                        .background(Color(0xFFF4F4F4))
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -172,60 +124,117 @@ fun TripDetailsScreen(
 }
 
 @Composable
-fun TripItem(trip: Trip) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        shadowElevation = 2.dp,
-        color = colorResource(R.color.dark_gray)
-    ) {
+private fun TripSummarySection(totalCount: Int, totalPrice: Int) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SummaryItem(
+                title = "Total Count",
+                value = totalCount.toString(),
+                modifier = Modifier.weight(1f)
+            )
+
+            SummaryItem(
+                title = "Total Price",
+                value = formatPrice(totalPrice),
+                modifier = Modifier.weight(1f)
+            )
+        }
+}
+
+@Composable
+private fun SummaryItem(title: String, value: String, modifier: Modifier = Modifier) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = title,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF737373)
+            )
+
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        }
+}
+
+@Composable
+fun TripItem(trip: Trip, locationALabel: String, locationBLabel: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(start = 28.dp, end = 28.dp, top = 2.dp, bottom = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        LocationRow(
+            label = locationALabel,
+            locationName = trip.a.name
+        )
+
+        LocationRow(
+            label = locationBLabel,
+            locationName = trip.b.name
+        )
+    }
+}
+
+@Composable
+private fun LocationRow(label: String, locationName: String) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.trip_location_a, trip.a.name),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colorResource(R.color.white),
-                        maxLines = 1
-                    )
-                    Text(
-                        text = stringResource(R.string.aqi_value, trip.a.aqi),
-                        fontSize = 11.sp,
-                        color = colorResource(R.color.gray)
-                    )
-                }
                 Text(
-                    text = stringResource(R.string.trip_price, trip.price),
+                    text = label,
+                    modifier = Modifier.width(30.dp),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                Text(
+                    text = locationName,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colorResource(R.color.primary_green)
-                )
-            }
-            
-            Column {
-                Text(
-                    text = stringResource(R.string.trip_location_b, trip.b.name),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorResource(R.color.white),
-                    maxLines = 1
-                )
-                Text(
-                    text = stringResource(R.string.aqi_value, trip.b.aqi),
-                    fontSize = 11.sp,
-                    color = colorResource(R.color.gray)
+                    color = Color.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
+}
+
+
+private fun getLocationLabel(index: Int): String {
+    return ('A'.code + index).toChar().toString()
+}
+
+private fun formatPrice(price: Int): String {
+    return if (price % 1.0 == 0.0) {
+        price.toLong().toString()
+    } else {
+        String.format("%.2f", price)
     }
 }
