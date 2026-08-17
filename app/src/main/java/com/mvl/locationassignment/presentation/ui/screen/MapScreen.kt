@@ -1,4 +1,4 @@
-package com.mvl.locationassignment.presentation.ui.screen
+package com.mvl.location.presentation.ui.screen
 
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -46,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.mvl.locationassignment.R
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -56,10 +56,11 @@ import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import com.mvl.locationassignment.presentation.state.ButtonState
-import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
-import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
+import com.mvl.locationassignment.R
 import com.mvl.locationassignment.data.model.BookingRequestBuilder
+import com.mvl.locationassignment.presentation.state.ButtonState
+import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
+import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
 import com.mvl.locationassignment.utils.PermissionUtils
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -75,7 +76,7 @@ fun MapScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val bookingUiState by bookingViewModel.uiState.collectAsState()
-     
+
     var hasLocationPermission by remember { mutableStateOf(PermissionUtils.hasLocationPermission(context)) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var centerMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
@@ -102,7 +103,7 @@ fun MapScreen(
         hasLocationPermission = permissions.values.all { it }
         if (hasLocationPermission) {
             getCurrentLocation(fusedLocationClient) { location ->
-               if (location != null) {
+                if (location != null) {
                     currentLocation = location
                     centerMarkerPosition = location
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(location, 12f)
@@ -112,8 +113,9 @@ fun MapScreen(
             }
         }
     }
-     
-    LaunchedEffect(Unit) {
+    
+    // Initialize location on first composition - ViewModel handles duplicate prevention
+    LaunchedEffect(key1 = Unit) {
         if (!hasLocationPermission) {
             permissionLauncher.launch(PermissionUtils.getLocationPermissions())
         } else {
@@ -128,8 +130,9 @@ fun MapScreen(
             }
         }
     }
-
-    LaunchedEffect(Unit) {
+    
+    // Monitor camera movement independently
+    LaunchedEffect(key1 = cameraPositionState) {
         snapshotFlow {
             cameraPositionState.isMoving
         }
@@ -143,7 +146,7 @@ fun MapScreen(
                 }
             }
     }
-    
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Map area - takes available space
@@ -156,7 +159,7 @@ fun MapScreen(
                     properties = MapProperties(mapType = MapType.NORMAL),
                     uiSettings = MapUiSettings(zoomControlsEnabled = true)
                 )
-                
+
                 // Pin Icon in center
                 Box(
                     modifier = Modifier
@@ -172,7 +175,7 @@ fun MapScreen(
                         contentScale = ContentScale.Fit
                     )
                 }
-                
+
                 // AQI Display in top right corner
                 if (!isCameraMoving) {
                     Box(
@@ -195,7 +198,7 @@ fun MapScreen(
                             ButtonState.SET_B -> uiState.aqiB ?: uiState.aqiA
                             else -> uiState.aqiB ?: uiState.aqiA
                         }
-                        
+
                         Text(
                             text = if (uiState.aqi_error != null) {
                                 "AQI - NA"
@@ -219,13 +222,13 @@ fun MapScreen(
                     }
                 }
             }
-            
-            // Bottom Control Panel - fixed height
+
+            // Bottom Control Panel - responsive height
             if (!isCameraMoving) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .wrapContentHeight(),
                     shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                     color = Color.White,
                     shadowElevation = 8.dp
@@ -268,8 +271,8 @@ fun MapScreen(
                                     }
                             )
                         }
-                        
-                        // Right side: Large V Button
+                         
+                        // Right side: V Button
                         Button(
                             onClick = {
                                 Log.d(TAG, "Button clicked - buttonState=${uiState.buttonState}")
@@ -301,12 +304,10 @@ fun MapScreen(
                                     }
                                 }
                             },
-                            modifier = Modifier
-                                .width(80.dp)
-                                .fillMaxHeight(),
+                            modifier = Modifier.size(80.dp),
                             enabled = !uiState.isLoading && !bookingUiState.isLoading && centerMarkerPosition != null && uiState.currentLocationInfo != null,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFC107), // Golden/Yellow color
+                                containerColor = Color(0xFFFFC107),
                                 contentColor = Color.Black,
                                 disabledContainerColor = Color(0xFFCCCCCC)
                             ),
@@ -332,9 +333,8 @@ fun MapScreen(
                                 )
                             }
                         }
-                        
+                         
                         if (uiState.error != null) {
-                            // Show error if needed
                             Log.e(TAG, "Error occurred: ${uiState.error}")
                         }
                     }

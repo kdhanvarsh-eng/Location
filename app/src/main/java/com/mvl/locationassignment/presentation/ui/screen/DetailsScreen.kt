@@ -1,16 +1,18 @@
-package com.mvl.locationassignment.presentation.ui.screen
+package com.mvl.location.presentation.ui.screen
 
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -34,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextStyle as ComposeTextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,103 +54,99 @@ fun DetailsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var nicknameInput by remember { mutableStateOf("") }
-    
+
     val selectedLocation = if (locationIndex == 0) uiState.locationA else uiState.locationB
     val selectedAqi = if (locationIndex == 0) uiState.aqiA else uiState.aqiB
     val label = if (locationIndex == 0) "A" else "B"
-    
+
     Log.d("DetailsScreen", "locationIndex=$locationIndex, selectedLocation=$selectedLocation, selectedAqi=$selectedAqi")
-    
+
     // Initialize nickname input when location changes
     LaunchedEffect(selectedLocation) {
         nicknameInput = selectedLocation?.nickname ?: ""
     }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.location_details),
-                        fontSize = 18.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = colorResource(R.color.white)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = colorResource(R.color.white)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = colorResource(R.color.primary_green)
-                )
-            )
-        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorResource(R.color.white))
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(paddingValues)
         ) {
-            // Top Section - Location Details
-            if (selectedLocation != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                        .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "$label  ${selectedLocation.address}",
-                        fontSize = 16.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
-                        color = colorResource(R.color.text_primary)
-                    )
+            // Scrollable content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, end = 20.dp, top = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (selectedLocation != null) {
+                    // Location Label and Address
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "aqi",
-                            fontSize = 12.sp,
-                            color = colorResource(R.color.text_gray)
-                        )
-                        Text(
-                            text = "${selectedAqi ?: 0}",
-                            fontSize = 16.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
+                            text = label,
+                            modifier = Modifier.width(30.dp),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
                             color = colorResource(R.color.text_primary)
                         )
+                        Text(
+                            text = selectedLocation.address,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colorResource(R.color.text_primary),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                }
-            } else {
-                Text(
-                    text = stringResource(R.string.no_location_data),
-                    color = colorResource(R.color.error_red),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
 
-            // Spacer to push nickname to bottom area
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
+                    // AQI Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 30.dp, end = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "aqi",
+                            fontSize = 14.sp,
+                            color = colorResource(R.color.text_gray),
+                            modifier = Modifier.weight(0.3f)
+                        )
+                        Text(
+                            text = (selectedAqi ?: 0).toString(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colorResource(R.color.text_primary),
+                            modifier = Modifier.weight(0.7f)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.no_location_data),
+                        color = colorResource(R.color.error_red),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
 
             // Bottom Section - Nickname Input Field and Button
             if (selectedLocation != null) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 12.dp
+                        )
                         .imePadding(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -159,15 +159,15 @@ fun DetailsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        placeholder = { 
+                            .height(50.dp),
+                        placeholder = {
                             Text(
                                 "Enter nickname",
                                 color = colorResource(R.color.text_gray)
-                            ) 
+                            )
                         },
                         textStyle = ComposeTextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             color = colorResource(R.color.text_primary)
                         ),
                         singleLine = true
@@ -183,8 +183,7 @@ fun DetailsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .height(56.dp)
+                            .height(50.dp)
                             .navigationBarsPadding(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorResource(R.color.primary_yellow),
@@ -192,9 +191,9 @@ fun DetailsScreen(
                         )
                     ) {
                         Text(
-                            text = "V",
-                            fontSize = 18.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            text = stringResource(R.string.continue_v),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

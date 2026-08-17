@@ -23,13 +23,21 @@ class TripHistoryViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(TripHistoryUiState())
     val uiState: StateFlow<TripHistoryUiState> = _uiState
+    private var hasInitialized = false
     
     fun fetchTrips(year: Int, month: Int) {
+        if (hasInitialized) {
+            Log.d(TAG, "Screen already initialized, skipping API call (orientation change detected)")
+            return
+        }
+
+        hasInitialized = true
+        
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                 
-                Log.d(TAG, "Fetching trips for $year-$month")
+                Log.d(TAG, "Fetching trips for $year-$month (first time)")
                 val trips = withContext(Dispatchers.IO) {
                     getTripsUseCase(year, month)
                 }

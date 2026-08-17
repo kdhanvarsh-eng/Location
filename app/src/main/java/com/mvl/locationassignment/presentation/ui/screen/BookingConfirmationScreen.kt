@@ -1,4 +1,4 @@
-package com.mvl.locationassignment.presentation.ui.screen
+package com.mvl.location.presentation.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +36,6 @@ import com.mvl.locationassignment.R
 import com.mvl.locationassignment.data.model.BookingResponse
 import com.mvl.locationassignment.data.model.LocationInfo
 import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
-
-private const val TAG = "BookingConfirmation"
 
 @Composable
 fun BookingConfirmationScreen(
@@ -196,7 +194,7 @@ private fun LocationDetailItem(label: String, address: String, aqi: Int, nicknam
 
             Text(
                 text = label,
-                modifier = Modifier.width(50.dp),
+                modifier = Modifier.width(30.dp),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = colorResource(
@@ -218,17 +216,17 @@ private fun LocationDetailItem(label: String, address: String, aqi: Int, nicknam
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 50.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(start = 30.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
             Text(
                 text = "aqi",
-                modifier = Modifier.width(180.dp),
                 fontSize = 14.sp,
                 color = colorResource(
                     R.color.text_gray
-                )
+                ),
+                modifier = Modifier.weight(0.3f)
             )
 
             Text(
@@ -237,24 +235,25 @@ private fun LocationDetailItem(label: String, address: String, aqi: Int, nicknam
                 fontWeight = FontWeight.Bold,
                 color = colorResource(
                     R.color.text_primary
-                )
+                ),
+                modifier = Modifier.weight(0.7f)
             )
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 50.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(start = 30.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
             Text(
                 text = "nickname",
-                modifier = Modifier.width(180.dp),
                 fontSize = 14.sp,
                 color = colorResource(
                     R.color.text_gray
-                )
+                ),
+                modifier = Modifier.weight(0.3f)
             )
 
             Text(
@@ -263,7 +262,8 @@ private fun LocationDetailItem(label: String, address: String, aqi: Int, nicknam
                 fontWeight = FontWeight.Bold,
                 color = colorResource(
                     R.color.text_primary
-                )
+                ),
+                modifier = Modifier.weight(0.7f)
             )
         }
     }

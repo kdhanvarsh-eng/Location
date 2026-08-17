@@ -116,25 +116,25 @@ fun TripDetailsScreen(
                                 .background(color = Color(0xFFF4F4F4))
                         )
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp)
-                            .weight(1f)
-                    ) {
-
-                        itemsIndexed(
-                            items = uiState.trips
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp)
+                                .weight(1f)
                         ) {
-                            index, trip ->
-                            val locationALabel = getLocationLabel(index * 2)
-                            val locationBLabel = getLocationLabel(index * 2 + 1)
 
-                            TripItem(
-                                trip = trip,
-                                locationALabel = locationALabel,
-                                locationBLabel = locationBLabel
-                            )
+                            itemsIndexed(
+                                items = uiState.trips
+                            ) {
+                                    index, trip ->
+                                val locationALabel = getLocationLabel(index * 2)
+                                val locationBLabel = getLocationLabel(index * 2 + 1)
+
+                                TripItem(
+                                    trip = trip,
+                                    locationALabel = locationALabel,
+                                    locationBLabel = locationBLabel
+                                )
 
                                 if (index < uiState.trips.lastIndex) {
                                     Spacer(
@@ -156,49 +156,48 @@ fun TripDetailsScreen(
 
 @Composable
 private fun TripSummarySection(totalCount: Int, totalPrice: Int) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .padding(start = 32.dp, end = 32.dp, top = 8.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SummaryItem(
-                title = "Total Count",
-                value = totalCount.toString(),
-                modifier = Modifier.weight(1f)
-            )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SummaryItem(
+            title = "Total Count",
+            value = totalCount.toString(),
+            modifier = Modifier.weight(1f)
+        )
 
-            SummaryItem(
-                title = "Total Price",
-                value = formatPrice(totalPrice),
-                modifier = Modifier.weight(1f)
-            )
-        }
+        SummaryItem(
+            title = "Total Price",
+            value = formatPrice(totalPrice),
+            modifier = Modifier.weight(1f)
+        )
+    }
 }
 
 @Composable
 private fun SummaryItem(title: String, value: String, modifier: Modifier = Modifier) {
-        Column(
-            modifier = modifier,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Text(
-                text = title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF737373)
-            )
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(
+            text = title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF737373)
+        )
 
-            Text(
-                text = value,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        }
+        Text(
+            text = value,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+    }
 }
 
 @Composable
@@ -225,36 +224,36 @@ fun TripItem(trip: Trip, locationALabel: String, locationBLabel: String
 
 @Composable
 private fun LocationRow(label: String, locationName: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = label,
-                    modifier = Modifier.width(30.dp),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+            Text(
+                text = label,
+                modifier = Modifier.width(30.dp),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
 
-                Text(
-                    text = locationName,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Text(
+                text = locationName,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
+    }
 }
 
 

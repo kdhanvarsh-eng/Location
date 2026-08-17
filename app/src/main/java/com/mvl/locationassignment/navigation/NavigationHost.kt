@@ -5,11 +5,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.mvl.location.presentation.ui.screen.BookingConfirmationScreen
+import com.mvl.location.presentation.ui.screen.DetailsScreen
+import com.mvl.location.presentation.ui.screen.MapScreen
 import com.mvl.locationassignment.presentation.viewmodel.LocationViewModel
 import com.mvl.locationassignment.presentation.viewmodel.BookingViewModel
-import com.mvl.locationassignment.presentation.ui.screen.BookingConfirmationScreen
-import com.mvl.locationassignment.presentation.ui.screen.DetailsScreen
-import com.mvl.locationassignment.presentation.ui.screen.MapScreen
 import com.mvl.locationassignment.presentation.ui.screen.TripDetailsScreen
 
 @Composable
