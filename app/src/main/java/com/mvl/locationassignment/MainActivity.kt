@@ -8,11 +8,9 @@ import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.mvl.locationassignment.navigation.NavigationHost
-import com.mvl.locationassignment.ui.theme.LocationAssignmentTheme
+import com.mvl.locationassignment.presentation.ui.theme.LocationAssignmentTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,7 +24,7 @@ class MainActivity : ComponentActivity() {
             window.setDecorFitsSystemWindows(false)
             val controller = window.insetsController
             if (controller != null) {
-                controller.hide(WindowInsets.Type.navigationBars() or WindowInsets.Type.statusBars())
+                controller.hide(WindowInsets.Type.navigationBars() )
                 controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {

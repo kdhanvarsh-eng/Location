@@ -3,16 +3,16 @@ package com.mvl.locationassignment.di
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.mvl.locationassignment.data.api.LocationApiService
+import com.mvl.locationassignment.data.api.BookingApiService
+import com.mvl.locationassignment.data.api.TripApiService
 import com.mvl.locationassignment.data.api.WaqiApiService
+import com.mvl.locationassignment.network.MockWebServerManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import okio.Buffer
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Qualifier
@@ -47,16 +47,10 @@ object NetworkModule {
     @Provides
     fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(loggingInterceptor)  // Log all requests/responses
             .build()
     }
 
-
-    @Singleton
-    @Provides
-    fun provideLocationApiService(retrofit: Retrofit): LocationApiService {
-        return retrofit.create(LocationApiService::class.java)
-    }
 
     @Singleton
     @Provides
@@ -73,5 +67,37 @@ object NetworkModule {
     @Provides
     fun provideWaqiApiService(@WaqiRetrofit retrofit: Retrofit): WaqiApiService {
         return retrofit.create(WaqiApiService::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideMockWebServerManager(gson: Gson): MockWebServerManager {
+        return MockWebServerManager(gson)
+    }
+
+    @Singleton
+    @Provides
+    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson, mockWebServerManager: MockWebServerManager): Retrofit {
+        // Assume MockWebServerManager is started by Application lifecycle
+        val baseUrl = mockWebServerManager.getBaseUrl()
+        Log.d(TAG, "Using MockWebServer base URL: $baseUrl")
+
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Singleton
+    @Provides
+    fun provideBookingApiService(retrofit: Retrofit): BookingApiService {
+        return retrofit.create(BookingApiService::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideTripApiService(retrofit: Retrofit): TripApiService {
+        return retrofit.create(TripApiService::class.java)
     }
 }

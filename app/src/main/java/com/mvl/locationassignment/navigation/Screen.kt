@@ -3,4 +3,6 @@ package com.mvl.locationassignment.navigation
 sealed class Screen(val route: String) {
     object MapScreen : Screen("map_screen")
     object DetailsScreen : Screen("details_screen")
+    object BookingConfirmationScreen : Screen("booking_confirmation_screen")
+    object TripDetailsScreen : Screen("trip_details_screen")
 }

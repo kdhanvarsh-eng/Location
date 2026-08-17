@@ -1,4 +1,4 @@
-package com.mvl.locationassignment.ui.theme
+package com.mvl.locationassignment.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
