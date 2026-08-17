@@ -79,6 +79,7 @@ fun MapScreen(
     var hasLocationPermission by remember { mutableStateOf(PermissionUtils.hasLocationPermission(context)) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var centerMarkerPosition by remember { mutableStateOf<LatLng?>(null) }
+    var isCameraMoving by remember { mutableStateOf(false) }
     
     // Navigate to booking confirmation when booking response is received
     LaunchedEffect(bookingUiState.bookingResponse) {
@@ -132,14 +133,14 @@ fun MapScreen(
         snapshotFlow {
             cameraPositionState.isMoving
         }
-            .filter { isMoving ->
-                !isMoving
-            }
-            .collectLatest {
-                val position = cameraPositionState.position.target
-                centerMarkerPosition = position
-                markerState.position = position
-                viewModel.updateCurrentLocationInfo(position.latitude, position.longitude)
+            .collectLatest { isMoving ->
+                isCameraMoving = isMoving
+                if (!isMoving) {
+                    val position = cameraPositionState.position.target
+                    centerMarkerPosition = position
+                    markerState.position = position
+                    viewModel.updateCurrentLocationInfo(position.latitude, position.longitude)
+                }
             }
     }
     
@@ -173,165 +174,169 @@ fun MapScreen(
                 }
                 
                 // AQI Display in top right corner
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
-                        .background(
-                            color = Color.White,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFFDDDDDD),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(12.dp)
-                ) {
-                    val currentAqi = when (uiState.buttonState) {
-                        ButtonState.SET_A -> uiState.aqiA
-                        ButtonState.SET_B -> uiState.aqiB ?: uiState.aqiA
-                        else -> uiState.aqiB ?: uiState.aqiA
-                    }
-                    
-                    Text(
-                        text = if (uiState.aqi_error != null) {
-                            "AQI - NA"
-                        } else if (currentAqi != null) {
-                            "AQI - $currentAqi"
-                        } else {
-                            "AQI - --"
-                        },
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = when {
-                            uiState.aqi_error != null -> Color.Red
-                            currentAqi == null -> Color.Gray
-                            currentAqi < 50 -> Color.Green
-                            currentAqi < 100 -> Color(0xFFFFB74D)
-                            currentAqi < 150 -> Color(0xFFFFA726)
-                            currentAqi < 200 -> Color(0xFFEF5350)
-                            else -> Color(0xFF8B0000)
+                if (!isCameraMoving) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .background(
+                                color = Color.White,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFFDDDDDD),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(12.dp)
+                    ) {
+                        val currentAqi = when (uiState.buttonState) {
+                            ButtonState.SET_A -> uiState.aqiA
+                            ButtonState.SET_B -> uiState.aqiB ?: uiState.aqiA
+                            else -> uiState.aqiB ?: uiState.aqiA
                         }
-                    )
+                        
+                        Text(
+                            text = if (uiState.aqi_error != null) {
+                                "AQI - NA"
+                            } else if (currentAqi != null) {
+                                "AQI - $currentAqi"
+                            } else {
+                                "AQI - --"
+                            },
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = when {
+                                uiState.aqi_error != null -> Color.Red
+                                currentAqi == null -> Color.Gray
+                                currentAqi < 50 -> Color.Green
+                                currentAqi < 100 -> Color(0xFFFFB74D)
+                                currentAqi < 150 -> Color(0xFFFFA726)
+                                currentAqi < 200 -> Color(0xFFEF5350)
+                                else -> Color(0xFF8B0000)
+                            }
+                        )
+                    }
                 }
             }
             
             // Bottom Control Panel - fixed height
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                color = Color.White,
-                shadowElevation = 8.dp
-            ) {
-                Row(
+            if (!isCameraMoving) {
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .height(120.dp),
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                    color = Color.White,
+                    shadowElevation = 8.dp
                 ) {
-                    // Left side: A and B labels stacked vertically
-                    Column(
+                    Row(
                         modifier = Modifier
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        LocationLabel(
-                            label = "A",
-                            address = uiState.locationA?.getDisplayName(),
+                        // Left side: A and B labels stacked vertically
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (uiState.locationA != null) {
-                                        viewModel.selectLocation(0)
-                                        onNavigateToDetails(0)
+                                .weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            LocationLabel(
+                                label = "A",
+                                address = uiState.locationA?.getDisplayName(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        if (uiState.locationA != null) {
+                                            viewModel.selectLocation(0)
+                                            onNavigateToDetails(0)
+                                        }
                                     }
-                                }
-                        )
-                        LocationLabel(
-                            label = "B",
-                            address = uiState.locationB?.getDisplayName(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (uiState.locationB != null) {
-                                        viewModel.selectLocation(1)
-                                        onNavigateToDetails(1)
-                                    }
-                                }
-                        )
-                    }
-                    
-                    // Right side: Large V Button
-                    Button(
-                        onClick = {
-                            Log.d(TAG, "Button clicked - buttonState=${uiState.buttonState}")
-                            when (uiState.buttonState) {
-                                ButtonState.BOOK -> {
-                                    Log.d(TAG, "Booking trip...")
-                                    val locationA = uiState.locationA
-                                    val locationB = uiState.locationB
-                                    if (locationA != null && locationB != null) {
-                                        val requestBuilder = BookingRequestBuilder(
-                                            locationA = locationA,
-                                            locationB = locationB,
-                                            aqiA = uiState.aqiA ?: 0,
-                                            aqiB = uiState.aqiB ?: 0
-                                        )
-                                        val bookingRequest = requestBuilder.build()
-                                        bookingViewModel.bookTrip(bookingRequest, requestBuilder)
-                                    } else {
-                                        Log.e(TAG, "Cannot book: Location A or B is null")
-                                    }
-                                }
-                                else -> {
-                                    uiState.currentLocationInfo?.let { locationInfo ->
-                                        Log.d(TAG, "Calling onVButtonClicked with $locationInfo")
-                                        viewModel.onVButtonClicked(locationInfo)
-                                    } ?: run {
-                                        Log.d(TAG, "currentLocationInfo is null, cannot save")
-                                    }
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .width(80.dp)
-                            .fillMaxHeight(),
-                        enabled = !uiState.isLoading && !bookingUiState.isLoading && centerMarkerPosition != null && uiState.currentLocationInfo != null,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFC107), // Golden/Yellow color
-                            contentColor = Color.Black,
-                            disabledContainerColor = Color(0xFFCCCCCC)
-                        ),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        if (uiState.isLoading || (uiState.buttonState == ButtonState.BOOK && bookingUiState.isLoading)) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.Black,
-                                strokeWidth = 2.dp
                             )
-                        } else {
-                            Text(
-                                text = when (uiState.buttonState) {
-                                    ButtonState.SET_A -> stringResource(R.string.set_a)
-                                    ButtonState.SET_B -> stringResource(R.string.set_b)
-                                    ButtonState.BOOK -> stringResource(R.string.book)
-                                },
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1
+                            LocationLabel(
+                                label = "B",
+                                address = uiState.locationB?.getDisplayName(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        if (uiState.locationB != null) {
+                                            viewModel.selectLocation(1)
+                                            onNavigateToDetails(1)
+                                        }
+                                    }
                             )
                         }
-                    }
-                    
-                    if (uiState.error != null) {
-                        // Show error if needed
-                        Log.e(TAG, "Error occurred: ${uiState.error}")
+                        
+                        // Right side: Large V Button
+                        Button(
+                            onClick = {
+                                Log.d(TAG, "Button clicked - buttonState=${uiState.buttonState}")
+                                when (uiState.buttonState) {
+                                    ButtonState.BOOK -> {
+                                        Log.d(TAG, "Booking trip...")
+                                        val locationA = uiState.locationA
+                                        val locationB = uiState.locationB
+                                        if (locationA != null && locationB != null) {
+                                            val requestBuilder = BookingRequestBuilder(
+                                                locationA = locationA,
+                                                locationB = locationB,
+                                                aqiA = uiState.aqiA ?: 0,
+                                                aqiB = uiState.aqiB ?: 0
+                                            )
+                                            val bookingRequest = requestBuilder.build()
+                                            bookingViewModel.bookTrip(bookingRequest, requestBuilder)
+                                        } else {
+                                            Log.e(TAG, "Cannot book: Location A or B is null")
+                                        }
+                                    }
+                                    else -> {
+                                        uiState.currentLocationInfo?.let { locationInfo ->
+                                            Log.d(TAG, "Calling onVButtonClicked with $locationInfo")
+                                            viewModel.onVButtonClicked(locationInfo)
+                                        } ?: run {
+                                            Log.d(TAG, "currentLocationInfo is null, cannot save")
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .width(80.dp)
+                                .fillMaxHeight(),
+                            enabled = !uiState.isLoading && !bookingUiState.isLoading && centerMarkerPosition != null && uiState.currentLocationInfo != null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFC107), // Golden/Yellow color
+                                contentColor = Color.Black,
+                                disabledContainerColor = Color(0xFFCCCCCC)
+                            ),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            if (uiState.isLoading || (uiState.buttonState == ButtonState.BOOK && bookingUiState.isLoading)) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.Black,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    text = when (uiState.buttonState) {
+                                        ButtonState.SET_A -> stringResource(R.string.set_a)
+                                        ButtonState.SET_B -> stringResource(R.string.set_b)
+                                        ButtonState.BOOK -> stringResource(R.string.book)
+                                    },
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                        
+                        if (uiState.error != null) {
+                            // Show error if needed
+                            Log.e(TAG, "Error occurred: ${uiState.error}")
+                        }
                     }
                 }
             }
